@@ -1,0 +1,5 @@
+keras_preprocessing
+numpy==1.18.5
+setuptools==41.0.0
+protobuf==3.19.0
+tensorflow==1.15

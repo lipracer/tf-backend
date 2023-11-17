@@ -1,0 +1,4 @@
+add_subdirectory(adt)
+add_subdirectory(logger)
+add_subdirectory(op_registry)
+add_subdirectory(platform)

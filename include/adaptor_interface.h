@@ -1,5 +1,8 @@
 #pragma once
 
-namespace tfbe {
+#include "macro.h"
+#include "op_registry.h"
 
+namespace tfbe
+{
 }
