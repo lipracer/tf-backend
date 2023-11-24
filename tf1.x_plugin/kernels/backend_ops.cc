@@ -204,11 +204,13 @@ H2DOp::~H2DOp() {}
 void H2DOp::Compute(OpKernelContext* ctx)
 {
     LOCK_SCOPE;
+    VLOG(0) << "H2DOp::Compute op name:" << ctx->op_kernel().name();
     auto deviceTensor = makeBeTensor(ctx->input(0));
     // cpu tensor we release immediately avoid leak
     // deviceTensor.getImpl()->increase_ref();
 
     deviceTensor = deviceTensor.to(tfbe::DeviceType::GPU);
+    VLOG(0) << "h2d result:" << deviceTensor;
     // input need always alive
     Tensor tfDeviceTensor = BeTensorToTfTensor(deviceTensor);
     // GPU tensor need always alive
@@ -223,7 +225,9 @@ D2HOp::~D2HOp() {}
 void D2HOp::Compute(OpKernelContext* ctx)
 {
     LOCK_SCOPE;
+    VLOG(0) << "D2HOp::Compute op name:" << ctx->op_kernel().name();
     {
+        // need check input is tf or be
         auto deviceTensor = TfTensorToBeTensor(ctx->input(0));
         deviceTensor = deviceTensor.to(tfbe::DeviceType::CPU);
         Tensor* output = nullptr;
@@ -239,6 +243,7 @@ BackendOp::~BackendOp() {}
 void BackendOp::Compute(OpKernelContext* ctx)
 {
     LOCK_SCOPE;
+    VLOG(0) << "BackendOp::Compute op name:" << ctx->op_kernel().name();
     auto op_def = tfbe::lookupOpDef(tfbe::getOpLibs(), ctx->op_kernel().type_string().c_str());
     size_t argsSize = ctx->num_inputs() + ctx->num_outputs();
     tfbe::OpCallStack stack;
@@ -257,6 +262,7 @@ void BackendOp::Compute(OpKernelContext* ctx)
     for (size_t i = 0; i < ctx->num_outputs(); ++i)
     {
         stack.tensors[ctx->num_inputs() + i].getImpl()->increase_ref();
+        VLOG(0) << "backend result:" << stack.tensors[ctx->num_inputs() + i];
     }
 
     for (size_t i = 0; i < ctx->num_outputs(); ++i)

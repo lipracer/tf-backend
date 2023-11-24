@@ -58,6 +58,7 @@ public:
 
     bool isArgument(Node*);
     bool isReturn(Node*);
+    bool isD2H(Node* node);
 
     void buildH2DNode(Node* node);
     void buildD2HNode(Node* node);
@@ -136,10 +137,14 @@ bool NodeReplacer::isReturn(Node* node)
     return "_Retval" == node->op_def().name();
 }
 
+bool NodeReplacer::isD2H(Node* node)
+{
+    return "D2HOp" == node->op_def().name();
+}
+
 bool NodeReplacer::hsaBackendImplement(Node* node)
 {
-    static std::set<std::string> white_list = {"AddV2", "Neg"};
-    return white_list.count(node->op_def().name());
+    return tfbe::lookupOpDef(tfbe::getOpLibs(), node->op_def().name().c_str());
 }
 
 void NodeReplacer::buildH2DNode(Node* node)
@@ -171,6 +176,14 @@ void NodeReplacer::buildD2HNode(Node* node)
     {
         output_edges_.push_back(edge);
     }
+    auto input = *std::begin(node->in_nodes());
+    if (!hsaBackendImplement(input))
+    {
+        graph_->AddEdge(find_new_node_or_die(node_map_, input).new_node, output_edges_[0]->src_output(), node,
+                        output_edges_[0]->dst_input());
+        return;
+    }
+
     Node* new_node = nullptr;
 
     NodeBuilder builder(/*name*/ "D2H_node_" + std::to_string(node_index()),
@@ -194,19 +207,90 @@ void NodeReplacer::buildD2HNode(Node* node)
 
 void NodeReplacer::buildNormalNode(Node* node)
 {
-    if (!hsaBackendImplement(node))
+    if (!node->num_outputs())
     {
-        node_map_.insert(std::make_pair(node, NodeWrap(node, node)));
         return;
     }
+    bool need_fallback = !hsaBackendImplement(node);
+    VLOG(0) << "check hsaBackendImplement:" << !need_fallback;
+
     remove_nodes_.push_back(node);
     Node* new_node = nullptr;
 
+    auto new_name = need_fallback ? node->op_def().name() : tfbe::OpNamePrefix + node->op_def().name();
     NodeBuilder builder(/*name*/ "backend_node_" + std::to_string(node_index()),
-                        /*op name*/ tfbe::OpNamePrefix + node->op_def().name());
+                        /*op name*/ new_name);
+
+    auto insert_h2d = [graph_ = graph_](Node* input) -> Node*
+    {
+        Node* new_node = nullptr;
+        NodeBuilder builder(/*name*/ "H2D_node_" + std::to_string(node_index()),
+                            /*op name*/ "H2DOp");
+
+        builder.Input(input);
+        Status status = builder.Finalize(graph_, &new_node);
+        if (!status.ok())
+        {
+            VLOG(0) << "backend_node error msg:" << status.error_message();
+            return nullptr;
+        }
+        // set_device(new_node);
+        VLOG(0) << "assigned_device_name:" << input->assigned_device_name();
+        new_node->set_assigned_device_name(input->assigned_device_name());
+        return new_node;
+    };
+
+    auto insert_d2h = [graph_ = graph_](Node* input) -> Node*
+    {
+        Node* new_node = nullptr;
+        NodeBuilder builder(/*name*/ "D2H_node_" + std::to_string(node_index()),
+                            /*op name*/ "D2HOp");
+
+        builder.Input(input);
+        Status status = builder.Finalize(graph_, &new_node);
+        if (!status.ok())
+        {
+            VLOG(0) << "backend_node error msg:" << status.error_message();
+            return nullptr;
+        }
+        // set_device(new_node);
+        VLOG(0) << "assigned_device_name:" << input->assigned_device_name();
+        new_node->set_assigned_device_name(input->assigned_device_name());
+        return new_node;
+    };
+
     for (auto input : node->in_nodes())
     {
-        builder.Input(find_new_node_or_die(node_map_, input).new_node);
+        VLOG(0) << "visit normal input:" << input->op_def().name();
+        Node* new_input = nullptr;
+        VLOG(0) << "check hsaBackendImplement input:" << hsaBackendImplement(input);
+        if (need_fallback)
+        {
+            if (!hsaBackendImplement(input) && !isArgument(input))
+            {
+                new_input = find_new_node_or_die(node_map_, input).new_node;
+            }
+            else if (isArgument(input))
+            {
+                new_input = input;
+            }
+            else
+            {
+                new_input = insert_d2h(find_new_node_or_die(node_map_, input).new_node);
+            }
+        }
+        else
+        {
+            if (!hsaBackendImplement(input) && !isArgument(input))
+            {
+                new_input = insert_h2d(find_new_node_or_die(node_map_, input).new_node);
+            }
+            else
+            {
+                new_input = find_new_node_or_die(node_map_, input).new_node;
+            }
+        }
+        builder.Input(new_input);
     }
     Status status = builder.Finalize(graph_, &new_node);
     if (!status.ok())

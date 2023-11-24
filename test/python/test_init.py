@@ -17,7 +17,8 @@ def createAddTestFunction(description, type):
         f = d+e
         g = c+f
         h = g+f
-        i = -h
+        i = tf.abs(h)
+        j = -i
         # get the tensorflow session
         config = tf.ConfigProto(
             allow_soft_placement=True, log_device_placement=True)
@@ -30,7 +31,7 @@ def createAddTestFunction(description, type):
                         d: [4.0, 5.0], e: [5.0, 6.0]}
 
         # now run the sum operation
-        ppx = sess.run([i], feed_dict)
+        ppx = sess.run([j], feed_dict)
 
         # print the result
         print(ppx)
