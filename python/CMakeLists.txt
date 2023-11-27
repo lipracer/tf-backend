@@ -7,6 +7,7 @@ target_link_libraries(tf_backend PUBLIC $<TARGET_OBJECTS:adt>)
 target_link_libraries(tf_backend PUBLIC $<TARGET_OBJECTS:op_registry>)
 target_link_libraries(tf_backend PUBLIC $<TARGET_OBJECTS:device>)
 target_link_libraries(tf_backend PUBLIC $<TARGET_OBJECTS:ops>)
+target_link_libraries(tf_backend PUBLIC fmt)
 
 set_target_properties(tf_backend
     PROPERTIES

@@ -1,7 +1,6 @@
 #include "op_registry.h"
 
 #include <utility>
-
 #include <string.h>
 
 #include "logger/logger.h"
@@ -163,7 +162,7 @@ OpDef* lookupOpDef(BEOpLibs_t libs, const char* name)
     {
         return nullptr;
     }
-    return reinterpret_cast<OpLibs*>(libs)->lookup(name + strlen(OpNamePrefix));
+    return reinterpret_cast<OpLibs*>(libs)->lookup(name);
 }
 
 BE_EXPORT BEOpLibs_t getOpLibs()

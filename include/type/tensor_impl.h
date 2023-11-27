@@ -5,36 +5,16 @@
 #include <vector>
 
 #include "../macro.h"
+#include "ArrayRef.h"
+#include "base_types.h"
 #include "ref_counter_ptr.h"
 #include "tensor_storage.h"
 
 namespace tfbe
 {
 
-enum class ElementType
-{
-    Unknown = 0,
-    Int8_t,
-    Uint8_t,
-    Int16_t,
-    Uint16_t,
-    Int32_t,
-    Uint32_t,
-    Int64_t,
-    Uint64_t,
-    Float16_t,
-    Float32_t,
-    Float64_t,
-    Bfoat16_t,
-};
-
-using DimT = int64_t;
-
 template <typename T>
 using ShapeType = std::vector<T>;
-
-template <typename T>
-using ArrayRef = const std::vector<T>&;
 
 inline size_t ElementSize(ElementType ele_type)
 {
@@ -52,8 +32,10 @@ inline size_t ElementSize(ElementType ele_type)
         case ElementType::Float32_t: return 4;
         case ElementType::Float64_t: return 8;
         case ElementType::Bfoat16_t: return 2;
+        default: break;
     };
     be_unreachable("unknown type!");
+    return 0;
 }
 
 inline size_t TotalElements(ArrayRef<DimT> shape)
@@ -77,6 +59,8 @@ public:
 
     size_t numBytes() const;
 
+    DimT rank() const;
+
     void* data() const;
 
     template <typename T>
@@ -91,12 +75,13 @@ public:
 
 protected:
     // TODO use TnesorImpl avoid the detail of implement
-    TensorStorage storage_;
-    Allocator* allocator_;
     ShapeType<DimT> shape_;
     ElementType element_type_{ElementType::Unknown};
+    TensorStorage storage_;
+    Allocator* allocator_;
 };
 
 std::ostream& operator<<(std::ostream& os, const TensorImpl& tensor);
+std::ostream& operator<<(std::ostream& os, ArrayRef<DimT> shape);
 
 } // namespace tfbe

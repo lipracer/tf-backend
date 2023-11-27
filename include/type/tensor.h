@@ -30,9 +30,14 @@ public:
     ~Tensor();
     // total element size
     size_t totalElements() const;
-    ArrayRef<DimT> shape() const;
+    // ArrayRef has the const qualify, this is proxy type
+    ArrayRef<DimT> shape();
+
     ElementType elementType() const;
+
     size_t numBytes() const;
+
+    DimT rank() const;
 
     template <typename T>
     T* data() const
@@ -48,6 +53,8 @@ public:
 
     Tensor operator+(const Tensor& rhs);
     Tensor operator-();
+
+    Tensor broadcast(ArrayRef<DimT> shape);
 
     Tensor to(DeviceInfo device);
 

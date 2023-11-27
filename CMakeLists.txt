@@ -6,12 +6,20 @@ set(CMAKE_CXX_FLAGS "-fPIC")
 
 set(CMAKE_CXX_STANDARD 14)
 
+add_compile_options(-Wall -Wextra -Wno-unused-parameter 
+-Wno-unused-function -Wno-unused-result -Wno-missing-field-initializers 
+-Wno-unknown-pragmas -Wno-type-limits -Wno-array-bounds -Wno-unknown-pragmas 
+-Wno-strict-overflow -Wno-strict-aliasing -Wno-missing-braces -Wno-uninitialized -Werror=return-type)
+
 add_subdirectory(compiler)
 add_subdirectory(distribution)
 add_subdirectory(lib)
 add_subdirectory(ops)
 add_subdirectory(python)
 add_subdirectory(runtime)
+
+# third_party
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/fmtlib)
 
 add_custom_target(plugin_target
     COMMAND bash ${CMAKE_CURRENT_LIST_DIR}/script/build_plugin.sh 
@@ -31,7 +39,7 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/googletest)
 
 file(GLOB TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/test/cc_test/*.cpp")
 add_executable(UnitTest ${TEST_SOURCES})
-target_link_libraries(UnitTest gtest gtest_main tf_backend)
+target_link_libraries(UnitTest gtest gtest_main tf_backend fmt)
 
 add_test(NAME UnitTest COMMAND UnitTest)
 

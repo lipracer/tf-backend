@@ -10,7 +10,8 @@ using namespace tfbe;
 
 TEST(TensorImplTest, ref_counter)
 {
-    auto a = tfbe::empty_tensor(DeviceType::CPU, {3, 2}, ElementType::Float32_t);
+    std::vector<DimT> shape = {3, 2};
+    auto a = tfbe::empty_tensor(DeviceType::CPU, shape, ElementType::Float32_t);
     EXPECT_EQ(a.getImpl()->fetch_count(), 1);
     {
         auto b = a;
@@ -35,7 +36,8 @@ static Tensor DummyFunc(Tensor tensor, size_t& counter)
 
 TEST(TensorImplTest, ref_counter_copy)
 {
-    auto tensor = tfbe::empty_tensor(DeviceType::CPU, {3, 2}, ElementType::Float32_t);
+    std::vector<DimT> shape = {3, 2};
+    auto tensor = tfbe::empty_tensor(DeviceType::CPU, shape, ElementType::Float32_t);
     EXPECT_EQ(tensor.getImpl()->fetch_count(), 1);
     size_t counter = 0;
     std::cout << "ref count:" << tensor.getImpl()->fetch_count() << std::endl;

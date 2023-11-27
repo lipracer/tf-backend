@@ -38,7 +38,7 @@ namespace tensorflow
 #define LOCK_SCOPE         \
     static std::mutex mtx; \
     std::lock_guard<std::mutex> _(mtx);
-// #define LOCK_SCOPE
+#define LOCK_SCOPE
 
 class BackendAllocator : public Allocator
 {
@@ -74,11 +74,13 @@ public:
 
     void setCurrentTensor(tfbe::TensorImpl* impl)
     {
+        mtx_.lock();
         impl_ = impl;
     }
 
 private:
     tfbe::TensorImpl* impl_{nullptr};
+    std::recursive_mutex mtx_;
 };
 
 BackendAllocator::~BackendAllocator() {}
@@ -90,7 +92,9 @@ string BackendAllocator::Name()
 
 void* BackendAllocator::AllocateRaw(size_t alignment, size_t num_bytes)
 {
-    return impl_;
+    auto ret = impl_;
+    mtx_.unlock();
+    return ret;
 }
 
 void BackendAllocator::DeallocateRaw(void* ptr)
@@ -189,8 +193,6 @@ tfbe::Tensor TfTensorToBeTensor(const Tensor& tensor)
 
 Tensor BeTensorToTfTensor(tfbe::Tensor tensor)
 {
-    static std::mutex mtx;
-    std::lock_guard<std::mutex> lg(mtx);
     backendAllocator.setCurrentTensor(tensor.getImpl().get());
     std::vector<int64> vShape(std::begin(tensor.shape()), std::end(tensor.shape()));
     TensorShape* shape = new TensorShape(vShape);
@@ -204,13 +206,13 @@ H2DOp::~H2DOp() {}
 void H2DOp::Compute(OpKernelContext* ctx)
 {
     LOCK_SCOPE;
-    VLOG(0) << "H2DOp::Compute op name:" << ctx->op_kernel().name();
+    LOG(INFO) << "H2DOp::Compute op name:" << ctx->op_kernel().name();
     auto deviceTensor = makeBeTensor(ctx->input(0));
     // cpu tensor we release immediately avoid leak
     // deviceTensor.getImpl()->increase_ref();
 
     deviceTensor = deviceTensor.to(tfbe::DeviceType::GPU);
-    VLOG(0) << "h2d result:" << deviceTensor;
+    // LOG(INFO) << "h2d result:" << deviceTensor;
     // input need always alive
     Tensor tfDeviceTensor = BeTensorToTfTensor(deviceTensor);
     // GPU tensor need always alive
@@ -225,7 +227,7 @@ D2HOp::~D2HOp() {}
 void D2HOp::Compute(OpKernelContext* ctx)
 {
     LOCK_SCOPE;
-    VLOG(0) << "D2HOp::Compute op name:" << ctx->op_kernel().name();
+    LOG(INFO) << "D2HOp::Compute op name:" << ctx->op_kernel().name();
     {
         // need check input is tf or be
         auto deviceTensor = TfTensorToBeTensor(ctx->input(0));
@@ -243,8 +245,14 @@ BackendOp::~BackendOp() {}
 void BackendOp::Compute(OpKernelContext* ctx)
 {
     LOCK_SCOPE;
-    VLOG(0) << "BackendOp::Compute op name:" << ctx->op_kernel().name();
-    auto op_def = tfbe::lookupOpDef(tfbe::getOpLibs(), ctx->op_kernel().type_string().c_str());
+    LOG(INFO) << "BackendOp::Compute op name:" << ctx->op_kernel().name()
+              << " kernel name:" << ctx->op_kernel().type_string().c_str();
+    auto be_name = ctx->op_kernel().type_string().c_str();
+    if (strstr(be_name, tfbe::OpNamePrefix))
+    {
+        be_name = be_name + strlen(tfbe::OpNamePrefix);
+    }
+    auto op_def = tfbe::lookupOpDef(tfbe::getOpLibs(), be_name);
     size_t argsSize = ctx->num_inputs() + ctx->num_outputs();
     tfbe::OpCallStack stack;
     stack.tensors = new tfbe::Tensor[argsSize];
@@ -262,7 +270,6 @@ void BackendOp::Compute(OpKernelContext* ctx)
     for (size_t i = 0; i < ctx->num_outputs(); ++i)
     {
         stack.tensors[ctx->num_inputs() + i].getImpl()->increase_ref();
-        VLOG(0) << "backend result:" << stack.tensors[ctx->num_inputs() + i];
     }
 
     for (size_t i = 0; i < ctx->num_outputs(); ++i)

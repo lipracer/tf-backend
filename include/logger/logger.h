@@ -9,15 +9,7 @@
 #include <sstream>
 #include <thread>
 
-#ifdef HAS_FMT_LIB
-    #include "fmt/core.h"
-#endif
-
-#ifdef HAS_NOT_FMT_LIB
-    #define __FMT_FUNC__(...) "unsupport fmt!"
-#else
-    #define __FMT_FUNC__(...) fmt::format(__VA_ARGS__)
-#endif
+#include "../../third_party/fmtlib/include/fmt/core.h"
 
 #ifndef LOGGER_LIKELY
     #define LOGGER_LIKELY(x) __builtin_expect(!!(x), 1)
@@ -405,17 +397,17 @@ void initLogger(const LogConfig& = LogConfig{});
 
 #define LOG(level) LOG_IMPL(static_cast<int>(level))
 
-#define CHECK(p, ...)                                  \
-    do                                                 \
-    {                                                  \
-        if (!(p))                                      \
-        {                                              \
-            LOG(FATAL) << __FILE__ << ":" << __LINE__; \
-        }                                              \
+#define CHECK(p, msg)                                         \
+    do                                                        \
+    {                                                         \
+        if (!(p))                                             \
+        {                                                     \
+            LOG(FATAL) << __FILE__ << ":" << __LINE__ << msg; \
+        }                                                     \
     } while (0)
 
-#define CHECK_LT(l, r, ...) CHECK(((l) < (r)), __VA_ARGS__)
-#define CHECK_LE(l, r, ...) CHECK(((l) <= (r)), __VA_ARGS__)
-#define CHECK_GT(l, r, ...) CHECK(((l) > (r)), __VA_ARGS__)
-#define CHECK_GE(l, r, ...) CHECK(((l) >= (r)), __VA_ARGS__)
-#define CHECK_EQ(l, r, ...) CHECK(((l) == (r)), __VA_ARGS__)
+#define CHECK_LT(l, r, ...) CHECK(((l) < (r)), fmt::format("expect lhs:{} < rhs:{}", l, r))
+#define CHECK_LE(l, r, ...) CHECK(((l) <= (r)), fmt::format("expect lhs:{} <= rhs:{}", l, r))
+#define CHECK_GT(l, r, ...) CHECK(((l) > (r)), fmt::format("expect lhs:{} > rhs:{}", l, r))
+#define CHECK_GE(l, r, ...) CHECK(((l) >= (r)), fmt::format("expect lhs:{} >= rhs:{}", l, r))
+#define CHECK_EQ(l, r, ...) CHECK(((l) == (r)), fmt::format("expect lhs:{} == rhs:{}", l, r))

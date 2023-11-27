@@ -276,13 +276,14 @@ public:
         exit_.store(true);
     }
 
-    void report_fatal()
+    void report_fatal() __attribute__((optimize("O0")))
     {
         exit_.store(true);
         if (th_)
             th_->join();
         // write nullptr statement maybe be motion to front
-        (void)malloc(std::numeric_limits<size_t>::max());
+        int zero = 0;
+        *reinterpret_cast<int*>(zero) = 0;
     }
 
     StringQueue& queue()

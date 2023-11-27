@@ -14,7 +14,17 @@ public:
     {
         auto lhs = ctx->input(0);
         auto rhs = ctx->input(1);
-        ctx->setOutput(2, lhs + rhs);
+        Tensor ret;
+        if (lhs.totalElements() > rhs.totalElements())
+        {
+            rhs = rhs.broadcast(lhs.shape());
+        }
+        else if (lhs.totalElements() < rhs.totalElements())
+        {
+            lhs = lhs.broadcast(rhs.shape());
+        }
+        ret = lhs + rhs;
+        ctx->setOutput(2, ret);
     }
 };
 

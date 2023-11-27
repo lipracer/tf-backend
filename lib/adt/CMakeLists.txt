@@ -1,5 +1,11 @@
 
-set(SOURCES tensor_impl.cpp tensor.cpp allocator.cpp ref_counter_ptr.cpp)
+set(SOURCES 
+tensor_impl.cpp 
+tensor.cpp 
+allocator.cpp 
+ref_counter_ptr.cpp 
+shape_inference.cpp
+)
 
 add_library(adt OBJECT ${SOURCES})
 

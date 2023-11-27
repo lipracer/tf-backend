@@ -54,6 +54,7 @@ Allocator* getAllocator(DeviceInfo info)
     {
         EXPECT(false, "unknown device info!");
     }
+    return {};
 }
 
 } // namespace tfbe

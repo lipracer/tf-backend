@@ -42,10 +42,6 @@ public:
 
     void increase_ref()
     {
-        if (!this)
-        {
-            return;
-        }
         assert(ref_counter_ && "increase empty counter!");
         ref_counter_->increase();
     }

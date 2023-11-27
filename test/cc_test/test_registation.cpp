@@ -47,6 +47,6 @@ public:
 TEST(OpRegistryTest, register_op)
 {
     REGISTER_KERNEL("AddV2", AddV2).Input("T").Output("T").Attr("N > 0");
-    auto op_def = lookupOpDef(getOpLibs(), "BackendOpAddV2");
+    auto op_def = lookupOpDef(getOpLibs(), "AddV2");
     EXPECT_EQ(op_def->name(), "AddV2");
 }

@@ -92,6 +92,7 @@ public:
     template <typename... ArgsT, typename... ResultsT>
     OpDefBuilder Kernel(void (*func)(ArgsT..., ResultsT...))
     {
+        return {};
     }
 
     OpDefBuilder KernelCreator(const OpDef::KernelCreatorT& creator);
