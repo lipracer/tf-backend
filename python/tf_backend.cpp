@@ -67,14 +67,6 @@ void global_destructor()
 
 extern "C"
 {
-    void _ZNK10tensorflow10DeviceBase4nameB5cxx11Ev() {}
-    void
-        _ZN10tensorflow18FileSystemCopyFileEPNS_10FileSystemERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES1_S9_()
-    {
-    }
-    void _ZN10tensorflow2io9CleanPathB5cxx11EN4absl11string_viewE() {}
-    void _ZN10tensorflow7strings6StrCatB5cxx11ERKNS0_8AlphaNumE() {}
-    void _ZN10tensorflow2io9CreateURIB5cxx11EN4absl11string_viewES2_S2_() {}
-    void _ZN10tensorflow2io8internal12JoinPathImplB5cxx11ESt16initializer_listIN4absl11string_viewEE() {}
+
 }
 } // namespace tfbe

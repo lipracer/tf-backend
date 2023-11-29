@@ -33,7 +33,7 @@ jobs:
       run: |
         git submodule update --init --recursive
         python script/apply_patch.py
-        bash script/build_plugin.sh -a
+        # bash script/build_plugin.sh -a
         cmake -S . -B build
         cmake --build build
         pip wheel .
