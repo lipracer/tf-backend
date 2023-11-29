@@ -15,12 +15,14 @@ size_t getTensorNumBytes(TensorImpl* impl)
 }
 
 TensorImpl::TensorImpl(DeviceInfo device_info, ArrayRef<DimT> shape, ElementType ele_type)
-    : shape_(shape.vec()), element_type_(ele_type), storage_(device_info)
+    : shape_(shape.vec()), element_type_(ele_type), storage_(std::make_shared<TensorStorage>(device_info))
 {
     auto numBytes = TotalElements(shape) * ElementSize(ele_type);
     allocator_ = getAllocator(device_info);
     auto data = allocator_->allocate(numBytes);
-    storage_ = TensorStorage(device_info, data, numBytes);
+    // storage_ = std::make_shared<TensorStorage>(device_info, data, numBytes);
+    storage_.reset(new TensorStorage(device_info, data, numBytes),
+                   [=](TensorStorage* storage) { allocator_->deallocate(storage->data()); });
 }
 
 TensorImpl::~TensorImpl() {}
@@ -32,7 +34,7 @@ size_t TensorImpl::totalElements() const
 
 size_t TensorImpl::numBytes() const
 {
-    return storage_.numBytes();
+    return storage_->numBytes();
 }
 
 ArrayRef<DimT> TensorImpl::shape() const
@@ -50,15 +52,35 @@ ElementType TensorImpl::elementType() const
     return element_type_;
 }
 
-void TensorImpl::setElementType(ElementType type)
-{
-    element_type_ = type;
-}
-
 void* TensorImpl::data() const
 {
-    EXPECT(storage_.data(), "");
-    return storage_.data();
+    EXPECT(storage_->data(), "");
+    return storage_->data();
+}
+
+std::shared_ptr<TensorStorage>& TensorImpl::getStorage()
+{
+    return storage_;
+}
+
+const std::shared_ptr<TensorStorage>& TensorImpl::getStorage() const
+{
+    return storage_;
+}
+
+void TensorImpl::setShape(ArrayRef<DimT> shape)
+{
+    shape_ = shape.vec();
+}
+
+void TensorImpl::setElementType(ElementType elementType)
+{
+    element_type_ = elementType;
+}
+
+void TensorImpl::setStorage(const std::shared_ptr<TensorStorage>& storage)
+{
+    storage_ = storage;
 }
 
 void TensorImpl::setAllocator(Allocator* allocator)
@@ -68,7 +90,17 @@ void TensorImpl::setAllocator(Allocator* allocator)
 
 DeviceInfo TensorImpl::getDeviceInfo() const
 {
-    return storage_.getDeviceInfo();
+    return storage_->getDeviceInfo();
+}
+
+TensorImpl* TensorImpl::reahspe(ArrayRef<DimT> new_shape)
+{
+    auto result = new TensorImpl();
+    result->setShape(new_shape);
+    result->setElementType(elementType());
+    result->setStorage(storage_);
+    result->setAllocator(allocator_);
+    return result;
 }
 
 std::ostream& operator<<(std::ostream& os, const TensorImpl& tensor)

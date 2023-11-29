@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <memory>
 #include <numeric>
 #include <vector>
 
@@ -55,7 +56,6 @@ public:
     ArrayRef<DimT> shape() const;
 
     ElementType elementType() const;
-    void setElementType(ElementType type);
 
     size_t numBytes() const;
 
@@ -69,16 +69,26 @@ public:
         return reinterpret_cast<T*>(data());
     }
 
+    DeviceInfo getDeviceInfo() const;
+
+    std::shared_ptr<TensorStorage>& getStorage();
+    const std::shared_ptr<TensorStorage>& getStorage() const;
+
+    void setShape(ArrayRef<DimT> shape);
+    void setElementType(ElementType elementType);
+    void setStorage(const std::shared_ptr<TensorStorage>& storage);
     void setAllocator(Allocator* allocator);
 
-    DeviceInfo getDeviceInfo() const;
+    TensorImpl* reahspe(ArrayRef<DimT> shape);
 
 protected:
     // TODO use TnesorImpl avoid the detail of implement
     ShapeType<DimT> shape_;
     ElementType element_type_{ElementType::Unknown};
-    TensorStorage storage_;
+    std::shared_ptr<TensorStorage> storage_;
     Allocator* allocator_;
+
+    friend class Tensor;
 };
 
 std::ostream& operator<<(std::ostream& os, const TensorImpl& tensor);

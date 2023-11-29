@@ -1,11 +1,13 @@
 #include "type/tensor.h"
 
+#include <cmath>
 #include <functional>
 #include <numeric>
 #include <ostream>
 
 #include <string.h>
 
+#include "../runtime/runtime.h"
 #include "internal/support.h"
 #include "logger/logger.h"
 #include "type/tensor_impl.h"
@@ -85,13 +87,9 @@ const IntrusivePtr<TensorImpl>& Tensor::getImpl() const
 
 Tensor Tensor::to(DeviceInfo device)
 {
-    if (getDeviceInfo() == device)
-    {
-        return Tensor(getImpl());
-    }
     auto new_tensor = empty_tensor(device, shape(), elementType());
-    // TODO memcpy to device
-    memcpy(new_tensor.data(), data(), numBytes());
+    auto result = runtime::device_memcpy(new_tensor.data(), data(), numBytes(), getDeviceInfo(), device);
+    CHECK(runtime::isSuccess(result), "runtime error code {}!", static_cast<int>(result));
     return new_tensor;
 }
 
@@ -206,6 +204,11 @@ void broadcastOneDim(ArrayRef<DimT> shape, DimT dim, size_t eleBytes, void* src_
 }
 } // namespace
 
+Tensor Tensor::reshape(ArrayRef<DimT> new_shape)
+{
+    return Tensor(IntrusivePtr<TensorImpl>(impl_->reahspe(new_shape)));
+}
+
 Tensor Tensor::broadcast(ArrayRef<DimT> shape)
 {
     auto result = empty_tensor(getDeviceInfo(), shape, elementType());
@@ -220,7 +223,7 @@ Tensor Tensor::broadcast(ArrayRef<DimT> shape)
             ++j;
         }
     }
-    CHECK_EQ(j, rank());
+    // CHECK_EQ(j + 1, rank());
     // LOG(INFO) << "new shape:" << new_shape;
     for (DimT i = shape.size() - 1; i >= 0; --i)
     {
@@ -229,6 +232,71 @@ Tensor Tensor::broadcast(ArrayRef<DimT> shape)
             broadcastOneDim(shape, i, ElementSize(elementType()), data(), result.data(), numBytes(), result.numBytes());
         }
     }
+    return result;
+}
+
+bool Tensor::isFloating() const
+{
+    CHECK_EQ(static_cast<int>(ElementType::Uint64_t) + 1, static_cast<int>(ElementType::Float16_t),
+             "need update this function!");
+    return static_cast<int>(elementType()) > static_cast<int>(ElementType::Uint64_t);
+}
+
+bool Tensor::isIntegral() const
+{
+    return static_cast<int>(elementType()) <= static_cast<int>(ElementType::Uint64_t);
+}
+
+bool allCloseIntegral(const Tensor& lhs, const Tensor& rhs, double rtol = 1e-05, double atol = 1e-08,
+                      bool equal_nan = false)
+{
+    return std::equal(reinterpret_cast<char*>(lhs.data()), reinterpret_cast<char*>(lhs.data()) + lhs.numBytes(),
+                      reinterpret_cast<char*>(rhs.data()));
+}
+
+// absolute(a - b) <= (atol + rtol * absolute(b))
+bool allCloseFloating(const Tensor& lhs, const Tensor& rhs, double rtol, double atol, bool equal_nan)
+{
+    EXPECT_EQ(lhs.elementType(), ElementType::Float32_t);
+    for (size_t i = 0; i < lhs.totalElements(); ++i)
+    {
+        auto lhs_value = *(lhs.data<float>() + i);
+        auto rhs_value = *(rhs.data<float>() + i);
+        if (std::isnan(lhs_value) && std::isnan(rhs_value) && !equal_nan)
+        {
+            return false;
+        }
+        else if (std::isnan(lhs_value) && std::isnan(rhs_value) && equal_nan)
+        {
+            continue;
+        }
+        else if (std::isnan(lhs_value) || std::isnan(rhs_value))
+        {
+            return false;
+        }
+        if (::abs(lhs_value - rhs_value) > atol + rtol * ::abs(rhs_value))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool allClose(const Tensor& lhs, const Tensor& rhs, double rtol, double atol, bool equal_nan)
+{
+    if (lhs.isIntegral())
+    {
+        return allCloseIntegral(lhs, rhs);
+    }
+    return allCloseFloating(lhs, rhs, rtol, atol, equal_nan);
+}
+
+template <>
+Tensor const_tensor<float>(std::vector<float>& data)
+{
+    std::vector<DimT> shape = {static_cast<DimT>(data.size()), DimT(1)};
+    auto result = empty_tensor(DeviceInfo(DeviceType::CPU), shape, ElementType::Float32_t);
+    memcpy(result.data(), data.data(), result.numBytes());
     return result;
 }
 

@@ -397,17 +397,19 @@ void initLogger(const LogConfig& = LogConfig{});
 
 #define LOG(level) LOG_IMPL(static_cast<int>(level))
 
-#define CHECK(p, msg)                                         \
-    do                                                        \
-    {                                                         \
-        if (!(p))                                             \
-        {                                                     \
-            LOG(FATAL) << __FILE__ << ":" << __LINE__ << msg; \
-        }                                                     \
+#define INTERNAL_CHECK_IMPL(p, msg)                                  \
+    do                                                               \
+    {                                                                \
+        if (!(p))                                                    \
+        {                                                            \
+            LOG(FATAL) << __FILE__ << ":" << __LINE__ << ":" << msg; \
+        }                                                            \
     } while (0)
 
-#define CHECK_LT(l, r, ...) CHECK(((l) < (r)), fmt::format("expect lhs:{} < rhs:{}", l, r))
-#define CHECK_LE(l, r, ...) CHECK(((l) <= (r)), fmt::format("expect lhs:{} <= rhs:{}", l, r))
-#define CHECK_GT(l, r, ...) CHECK(((l) > (r)), fmt::format("expect lhs:{} > rhs:{}", l, r))
-#define CHECK_GE(l, r, ...) CHECK(((l) >= (r)), fmt::format("expect lhs:{} >= rhs:{}", l, r))
-#define CHECK_EQ(l, r, ...) CHECK(((l) == (r)), fmt::format("expect lhs:{} == rhs:{}", l, r))
+#define CHECK(p, ...) INTERNAL_CHECK_IMPL((p), fmt::format(__VA_ARGS__))
+
+#define CHECK_LT(l, r, ...) INTERNAL_CHECK_IMPL(((l) < (r)), fmt::format("expect lhs:{} < rhs:{}", l, r))
+#define CHECK_LE(l, r, ...) INTERNAL_CHECK_IMPL(((l) <= (r)), fmt::format("expect lhs:{} <= rhs:{}", l, r))
+#define CHECK_GT(l, r, ...) INTERNAL_CHECK_IMPL(((l) > (r)), fmt::format("expect lhs:{} > rhs:{}", l, r))
+#define CHECK_GE(l, r, ...) INTERNAL_CHECK_IMPL(((l) >= (r)), fmt::format("expect lhs:{} >= rhs:{}", l, r))
+#define CHECK_EQ(l, r, ...) INTERNAL_CHECK_IMPL(((l) == (r)), fmt::format("expect lhs:{} == rhs:{}", l, r))
