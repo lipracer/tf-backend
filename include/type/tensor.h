@@ -84,6 +84,6 @@ BE_EXPORT Tensor empty_tensor(DeviceInfo info, ArrayRef<DimT> shape, ElementType
 BE_EXPORT std::ostream& operator<<(std::ostream&, const Tensor& tensor);
 
 template <typename T>
-Tensor const_tensor(std::vector<T>& data);
+Tensor makeCconstantTensor(std::vector<T>& data);
 
 } // namespace tfbe

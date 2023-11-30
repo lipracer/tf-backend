@@ -8,6 +8,27 @@
 
 namespace tfbe
 {
+size_t ElementSize(ElementType ele_type)
+{
+    switch (ele_type)
+    {
+        case ElementType::Int8_t: return 1;
+        case ElementType::Uint8_t: return 1;
+        case ElementType::Int16_t: return 2;
+        case ElementType::Uint16_t: return 2;
+        case ElementType::Int32_t: return 4;
+        case ElementType::Uint32_t: return 4;
+        case ElementType::Int64_t: return 8;
+        case ElementType::Uint64_t: return 8;
+        case ElementType::Float16_t: return 2;
+        case ElementType::Float32_t: return 4;
+        case ElementType::Float64_t: return 8;
+        case ElementType::Bfoat16_t: return 2;
+        default: break;
+    };
+    be_unreachable("unknown type!");
+    return 0;
+}
 
 size_t getTensorNumBytes(TensorImpl* impl)
 {

@@ -223,8 +223,6 @@ Tensor Tensor::broadcast(ArrayRef<DimT> shape)
             ++j;
         }
     }
-    // CHECK_EQ(j + 1, rank());
-    // LOG(INFO) << "new shape:" << new_shape;
     for (DimT i = shape.size() - 1; i >= 0; --i)
     {
         if (new_shape[i] == 1)
@@ -292,7 +290,7 @@ bool allClose(const Tensor& lhs, const Tensor& rhs, double rtol, double atol, bo
 }
 
 template <>
-Tensor const_tensor<float>(std::vector<float>& data)
+Tensor makeCconstantTensor<float>(std::vector<float>& data)
 {
     std::vector<DimT> shape = {static_cast<DimT>(data.size()), DimT(1)};
     auto result = empty_tensor(DeviceInfo(DeviceType::CPU), shape, ElementType::Float32_t);

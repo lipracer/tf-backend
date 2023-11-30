@@ -413,3 +413,5 @@ void initLogger(const LogConfig& = LogConfig{});
 #define CHECK_GT(l, r, ...) INTERNAL_CHECK_IMPL(((l) > (r)), fmt::format("expect lhs:{} > rhs:{}", l, r))
 #define CHECK_GE(l, r, ...) INTERNAL_CHECK_IMPL(((l) >= (r)), fmt::format("expect lhs:{} >= rhs:{}", l, r))
 #define CHECK_EQ(l, r, ...) INTERNAL_CHECK_IMPL(((l) == (r)), fmt::format("expect lhs:{} == rhs:{}", l, r))
+
+#define be_unreachable(...) INTERNAL_CHECK_IMPL(false, __VA_ARGS__)

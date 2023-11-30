@@ -20,6 +20,10 @@ TEST(TensorOperator, broadcast)
     auto new_tensor = tensor.broadcast(new_shape);
     LOG(WARN) << tensor;
     LOG(WARN) << new_tensor;
+
+    std::vector<float> golden_values = {1.0f, 1.0f, 2.0f, 2.0f, 3.0f, 3.0f};
+    auto golden_tensor = makeCconstantTensor(golden_values);
+    EXPECT_TRUE(allClose(new_tensor, golden_tensor));
 }
 
 TEST(TensorOperator, reshape)
@@ -53,6 +57,6 @@ TEST(TensorOperator, broadcast_mnist)
     {
         std::iota(golden_values.begin() + 10 * i, golden_values.begin() + 10 + 10 * i, 1);
     }
-    auto golden_tensor = const_tensor(golden_values);
+    auto golden_tensor = makeCconstantTensor(golden_values);
     EXPECT_TRUE(allClose(new_tensor, golden_tensor));
 }
