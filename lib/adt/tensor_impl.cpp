@@ -40,10 +40,10 @@ TensorImpl::TensorImpl(DeviceInfo device_info, ArrayRef<DimT> shape, ElementType
 {
     auto numBytes = TotalElements(shape) * ElementSize(ele_type);
     allocator_ = getAllocator(device_info);
-    auto data = allocator_->allocate(numBytes);
+    auto data = allocator_->allocate(numBytes, device_info);
     // storage_ = std::make_shared<TensorStorage>(device_info, data, numBytes);
     storage_.reset(new TensorStorage(device_info, data, numBytes),
-                   [=](TensorStorage* storage) { allocator_->deallocate(storage->data()); });
+                   [=](TensorStorage* storage) { allocator_->deallocate(storage->data(), device_info); });
 }
 
 TensorImpl::~TensorImpl() {}

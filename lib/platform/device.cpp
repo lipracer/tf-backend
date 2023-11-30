@@ -34,6 +34,16 @@ bool DeviceInfo::isGPU()
     return type_ == DeviceType::GPU;
 }
 
+DeviceGuard::DeviceGuard(const DeviceInfo& info)
+{
+    be_unreachable("unimplement!");
+}
+
+DeviceGuard::~DeviceGuard()
+{
+    be_unreachable("unimplement!");
+}
+
 std::ostream& operator<<(std::ostream& os, const DeviceInfo& info)
 {
     os << "(" << info.to_string() << ")";
@@ -44,7 +54,7 @@ Allocator* getAllocator(DeviceInfo info)
 {
     if (info.isCPU())
     {
-        return new Allocator();
+        return new CpuAllocator();
     }
     else if (info.isGPU())
     {

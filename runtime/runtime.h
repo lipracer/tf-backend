@@ -50,7 +50,7 @@ inline bool isFailure(const RTErr_t& code)
 RTErr_t success();
 RTErr_t failure();
 
-RTErr_t device_malloc(size_t size, DeviceInfo dev, void** ptr);
+RTErr_t device_malloc(void** ptr, size_t size, DeviceInfo dev);
 RTErr_t device_free(void* ptr);
 
 RTErr_t device_memcpy(void* dst, void* src, size_t size, DeviceInfo dst_dev, DeviceInfo src_dev);

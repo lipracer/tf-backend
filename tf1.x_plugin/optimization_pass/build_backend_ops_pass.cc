@@ -74,8 +74,8 @@ public:
 
     void set_device(Node* node)
     {
-        LOG(INFO) << "set_device:" << node->DebugString();
-        "/job:localhost/replica:0/task:0/device:CPU:0";
+        // LOG(INFO) << "set_device:" << node->DebugString();
+        // "/job:localhost/replica:0/task:0/device:CPU:0";
         // node->set_requested_device(requested_device_name_);
         // node->set_assigned_device_name(assigned_device_name_);
         // node->set_requested_device("/job:localhost/replica:0/task:0/device:CPU:0");
@@ -93,12 +93,11 @@ public:
         auto iter = map.find(node);
         if (iter == map.end())
         {
-            LOG(INFO) << "can not find maped node of:" << node->DebugString();
-
-            for (auto it : map)
-            {
-                LOG(INFO) << it.first->DebugString() << "\nvs\n" << it.second.new_node->DebugString();
-            }
+            // LOG(INFO) << "can not find maped node of:" << node->DebugString();
+            // for (auto it : map)
+            // {
+            //     LOG(INFO) << it.first->DebugString() << "\nvs\n" << it.second.new_node->DebugString();
+            // }
         }
 
         CHECK(iter != map.end());
@@ -160,7 +159,7 @@ bool NodeReplacer::hsaBackendImplement(Node* node)
 
 void NodeReplacer::handleArgument(Node* node)
 {
-    LOG(INFO) << node->DebugString();
+    // LOG(INFO) << node->DebugString();
     for (auto edge : node->out_edges())
     {
         input_edges_.push_back(edge);
@@ -173,10 +172,10 @@ void NodeReplacer::handleArgument(Node* node)
     Status status = builder.Finalize(graph_, &new_node);
     if (!status.ok())
     {
-        LOG(INFO) << "backend_node error msg:" << status.error_message();
+        // LOG(INFO) << "backend_node error msg:" << status.error_message();
     }
     // set_device(node, new_node);
-    LOG(INFO) << "assigned_device_name:" << node->assigned_device_name();
+    // LOG(INFO) << "assigned_device_name:" << node->assigned_device_name();
     new_node->set_assigned_device_name(node->assigned_device_name());
     auto insert_ret = node_map_.insert(std::make_pair(node, NodeWrap(node, new_node)));
     if (!insert_ret.second)
@@ -213,10 +212,10 @@ void NodeReplacer::handleReturn(Node* node)
     Status status = builder.Finalize(graph_, &new_node);
     if (!status.ok())
     {
-        LOG(INFO) << "backend_node error msg:" << status.error_message();
+        // LOG(INFO) << "backend_node error msg:" << status.error_message();
     }
     // set_device(new_node);
-    LOG(INFO) << "assigned_device_name:" << node->assigned_device_name();
+    // LOG(INFO) << "assigned_device_name:" << node->assigned_device_name();
     new_node->set_assigned_device_name(node->assigned_device_name());
     node_map_.insert(std::make_pair(node, NodeWrap(node, new_node)));
 
@@ -226,7 +225,7 @@ void NodeReplacer::handleReturn(Node* node)
 void NodeReplacer::handleNormalOp(Node* node)
 {
     bool need_fallback = !hsaBackendImplement(node);
-    LOG(INFO) << "check hsaBackendImplement:" << !need_fallback;
+    // LOG(INFO) << "check hsaBackendImplement:" << !need_fallback;
 
     remove_nodes_.push_back(node);
     Node* new_node = nullptr;
@@ -245,7 +244,7 @@ void NodeReplacer::handleNormalOp(Node* node)
         builder.Attr(attr.first, attr.second);
     }
 
-    auto insert_h2d = [graph_ = graph_](Node* input) -> Node*
+    auto insert_h2d = [=](Node* input) -> Node*
     {
         Node* new_node = nullptr;
         NodeBuilder builder(/*name*/ "H2D_node_" + std::to_string(node_index()),
@@ -255,16 +254,16 @@ void NodeReplacer::handleNormalOp(Node* node)
         Status status = builder.Finalize(graph_, &new_node);
         if (!status.ok())
         {
-            LOG(INFO) << "backend_node error msg:" << status.error_message();
+            // LOG(INFO) << "backend_node error msg:" << status.error_message();
             return nullptr;
         }
         // set_device(new_node);
-        LOG(INFO) << "assigned_device_name:" << input->assigned_device_name();
+        // LOG(INFO) << "assigned_device_name:" << input->assigned_device_name();
         new_node->set_assigned_device_name(input->assigned_device_name());
         return new_node;
     };
 
-    auto insert_d2h = [graph_ = graph_](Node* input) -> Node*
+    auto insert_d2h = [=](Node* input) -> Node*
     {
         Node* new_node = nullptr;
         NodeBuilder builder(/*name*/ "D2H_node_" + std::to_string(node_index()),
@@ -274,11 +273,11 @@ void NodeReplacer::handleNormalOp(Node* node)
         Status status = builder.Finalize(graph_, &new_node);
         if (!status.ok())
         {
-            LOG(INFO) << "backend_node error msg:" << status.error_message();
+            // LOG(INFO) << "backend_node error msg:" << status.error_message();
             return nullptr;
         }
         // set_device(new_node);
-        LOG(INFO) << "assigned_device_name:" << input->assigned_device_name();
+        // LOG(INFO) << "assigned_device_name:" << input->assigned_device_name();
         new_node->set_assigned_device_name(input->assigned_device_name());
         return new_node;
     };
@@ -293,8 +292,8 @@ void NodeReplacer::handleNormalOp(Node* node)
         {
             extra_edges.push_back(edge);
         }
-        LOG(INFO) << "visit normal input:" << input->op_def().name() << " with dst index:" << edge->dst_input()
-                  << " check hsaBackendImplement input:" << hsaBackendImplement(input);
+        // LOG(INFO) << "visit normal input:" << input->op_def().name() << " with dst index:" << edge->dst_input()
+                //   << " check hsaBackendImplement input:" << hsaBackendImplement(input);
         Node* new_input = nullptr;
         if (need_fallback)
         {
@@ -340,14 +339,14 @@ void NodeReplacer::handleNormalOp(Node* node)
     else
     {
         new_inputs.resize(node->num_inputs());
-        for (; input_index < node->num_inputs(); ++input_index)
+        for (; input_index < static_cast<size_t>(node->num_inputs()); ++input_index)
         {
             builder.Input(std::get<0>(new_inputs[input_index]), std::get<1>((new_inputs[input_index])));
         }
     }
 
     Status status = builder.Finalize(graph_, &new_node);
-    auto edge_iter = std::begin(node->in_edges());
+    // auto edge_iter = std::begin(node->in_edges());
 
     if (node->op_def().name() == "Size")
     {
@@ -366,11 +365,11 @@ void NodeReplacer::handleNormalOp(Node* node)
     // }
     if (!status.ok())
     {
-        LOG(INFO) << "backend_node error msg:" << status.error_message();
-        LOG(INFO) << "Node Debug String:" << node->DebugString();
+        // LOG(INFO) << "backend_node error msg:" << status.error_message();
+        // LOG(INFO) << "Node Debug String:" << node->DebugString();
     }
     // set_device(new_node);
-    LOG(INFO) << "assigned_device_name:" << node->assigned_device_name();
+    // LOG(INFO) << "assigned_device_name:" << node->assigned_device_name();
 
     new_node->set_assigned_device_name(node->assigned_device_name());
 
@@ -381,7 +380,7 @@ void NodeReplacer::do_replace()
 {
     for (auto iter = nodes_.begin(); iter != nodes_.end(); ++iter)
     {
-        LOG(INFO) << "visit node op name:" << (*iter)->op_def().name();
+        // LOG(INFO) << "visit node op name:" << (*iter)->op_def().name();
         if (isArgument(*iter))
         {
             handleArgument(*iter);
@@ -407,7 +406,7 @@ void NodeReplacer::do_replace()
 
 void replaceNodeWithBackendNode(Graph* graph, Node* node)
 {
-    LOG(INFO) << "visit node op name:" << node->op_def().name();
+    // LOG(INFO) << "visit node op name:" << node->op_def().name();
     static std::set<std::string> white_list = {"AddV2", "Neg"};
     if (!white_list.count(node->op_def().name()))
     {
@@ -429,7 +428,7 @@ void replaceNodeWithBackendNode(Graph* graph, Node* node)
         Status status = builder.Finalize(graph, &H2DNode);
         if (!status.ok())
         {
-            LOG(INFO) << "backend_node error msg:" << status.error_message();
+            // LOG(INFO) << "backend_node error msg:" << status.error_message();
         }
         H2DNode->set_requested_device(arg->requested_device());
         H2DNode->set_assigned_device_name(arg->assigned_device_name());
@@ -446,15 +445,12 @@ void replaceNodeWithBackendNode(Graph* graph, Node* node)
         Status status = builder.Finalize(graph, &D2HNode);
         if (!status.ok())
         {
-            LOG(INFO) << "backend_node error msg:" << status.error_message();
+            // LOG(INFO) << "backend_node error msg:" << status.error_message();
         }
         D2HNode->set_requested_device(ret->requested_device());
         D2HNode->set_assigned_device_name(ret->assigned_device_name());
         return D2HNode;
     };
-
-    LOG(INFO) << "replaceNodeWithBackendNode:" << node->name() << " vs op name:" << node->op_def().name()
-              << " NodeDef:" << node->def().DebugString();
 
     NodeBuilder builder(/*name*/ "backend_node_" + std::to_string(node_index++),
                         /*op name*/ node->op_def().name() + "BackendOp");
@@ -471,7 +467,7 @@ void replaceNodeWithBackendNode(Graph* graph, Node* node)
     // remove origin node
     if (!status.ok())
     {
-        LOG(INFO) << "backend_node error msg:" << status.error_message();
+        // LOG(INFO) << "backend_node error msg:" << status.error_message();
     }
     else
     {
@@ -503,10 +499,6 @@ void replaceNodeWithBackendNode(Graph* graph, Node* node)
             graph->RemoveEdge(edge);
         }
         graph->RemoveNode(node);
-
-        LOG(INFO) << "replaceNodeWithBackendNode:" << backend_node->name()
-                  << " vs op name:" << backend_node->op_def().name()
-                  << " NodeDef:" << backend_node->def().DebugString();
     }
 }
 } // namespace
@@ -533,15 +525,15 @@ private:
 Status BuildBackendOpsPass::Run(const GraphOptimizationPassOptions& options)
 {
     Graph* graph = options.graph->get();
-    LOG(INFO) << "graph:" << graph->ToGraphDefDebug().DebugString();
+    // LOG(INFO) << "graph:" << graph->ToGraphDefDebug().DebugString();
     std::deque<Node*> all_nodes;
     bool isLegalGraph = false;
 
     std::unordered_set<Node*> leafNodes;
     for (auto node : graph->nodes())
     {
-        LOG(INFO) << "visit and record op name:" << node->op_def().name();
-        LOG(INFO) << "debug string:" << node->DebugString();
+        // LOG(INFO) << "visit and record op name:" << node->op_def().name();
+        // LOG(INFO) << "debug string:" << node->DebugString();
         if (0 == node->num_inputs() && 0 == node->num_outputs())
         {
             continue;
@@ -555,10 +547,10 @@ Status BuildBackendOpsPass::Run(const GraphOptimizationPassOptions& options)
         }
         all_nodes.push_back(node);
     }
-    LOG(INFO) << "begin rewriter!";
+    // LOG(INFO) << "begin rewriter!";
     if (!isLegalGraph)
     {
-        LOG(INFO) << "ilegal graph===================";
+        // LOG(INFO) << "ilegal graph===================";
         return Status::OK();
     }
     (void)FixupSourceAndSinkEdges(graph);
@@ -575,7 +567,7 @@ Status BuildBackendOpsPass::Run(const GraphOptimizationPassOptions& options)
         replacer.do_replace();
     }
 
-    LOG(INFO) << "graph:" << graph->ToGraphDefDebug().DebugString();
+    // LOG(INFO) << "graph:" << graph->ToGraphDefDebug().DebugString();
 
     return Status::OK();
 }

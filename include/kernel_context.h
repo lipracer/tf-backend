@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "type/tensor.h"
+#include "device.h"
 
 namespace tfbe
 {
@@ -42,6 +43,8 @@ public:
     // Tensor input(size_t idx);
 
     void setOutput(size_t idx, Tensor tensor);
+
+    DeviceStream getCurrentStream();
 
 private:
     std::shared_ptr<DeviceOpKernelContextImpl> impl_;

@@ -21,13 +21,14 @@ RTErr_t failure()
     return static_cast<RTErr_t>(-1);
 }
 
-RTErr_t device_malloc(size_t size, DeviceInfo dev, void** ptr)
+RTErr_t device_malloc(void** ptr, size_t size, DeviceInfo dev)
 {
     auto p = malloc(size);
-    CHECK(ptr, "ptr is null!");
+    CHECK(p, "ptr is null with size:{}!", size);
     *ptr = p;
     return success();
 }
+
 RTErr_t device_free(void* ptr)
 {
     if (ptr)

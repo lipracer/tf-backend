@@ -64,6 +64,18 @@ private:
     int64_t device_id_{0};
 };
 
+struct BE_EXPORT DeviceGuard
+{
+    DeviceGuard() = delete;
+    DeviceGuard(const DeviceInfo& info);
+    ~DeviceGuard();
+};
+
+struct BE_EXPORT DeviceStream
+{
+    void* stream;
+};
+
 std::ostream& operator<<(std::ostream& os, const DeviceInfo& info);
 
 class Allocator;

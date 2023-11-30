@@ -15,6 +15,10 @@
 namespace tfbe
 {
 
+//============================================================//
+// TensorStorage
+//============================================================//
+
 TensorStorage::TensorStorage(DeviceInfo info, void* ptr, size_t size) : storage_(ptr), size_(size), device_info_(info)
 {
 }
@@ -35,6 +39,10 @@ DeviceInfo TensorStorage::getDeviceInfo() const
 {
     return device_info_;
 }
+
+//============================================================//
+// Tensor
+//============================================================//
 
 Tensor::Tensor(IntrusivePtr<TensorImpl> impl) : impl_(impl) {}
 
@@ -102,6 +110,10 @@ DeviceInfo Tensor::getDeviceInfo() const
 {
     return impl_->getDeviceInfo();
 }
+
+//============================================================//
+// FloatTensor
+//============================================================//
 
 FloatTensor::FloatTensor(DeviceInfo device_info, ArrayRef<DimT> shape, size_t bpe, bool is_std)
     : Tensor(device_info, shape)

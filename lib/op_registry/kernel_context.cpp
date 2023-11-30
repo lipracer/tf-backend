@@ -61,9 +61,15 @@ Tensor DeviceOpKernelContext::input(size_t idx)
 {
     return impl_->input(idx);
 }
+
 void DeviceOpKernelContext::setOutput(size_t idx, Tensor tensor)
 {
     impl_->setOutput(idx, tensor);
+}
+
+DeviceStream DeviceOpKernelContext::getCurrentStream()
+{
+    return {};
 }
 
 } // namespace tfbe
