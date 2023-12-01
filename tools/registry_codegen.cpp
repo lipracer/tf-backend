@@ -8,6 +8,7 @@
 #include "clang/Rewrite/Core/Rewriter.h"
 #include "clang/Tooling/Refactoring/AtomicChange.h"
 #include "llvm/Support/CommandLine.h"
+#include <fstream>
 
 using namespace clang::tooling;
 using namespace llvm;
@@ -16,6 +17,8 @@ using namespace llvm;
 static_assert(_GLIBCXX_USE_CXX11_ABI == 1, "");
 
 static llvm::cl::OptionCategory MyToolCategory("my-tool options");
+static cl::opt<std::string> output_path("output-path", cl::desc("rcodegen output path]"), cl::value_desc("a full path"),
+                                        cl::ValueRequired, cl::NotHidden, cl::cat(MyToolCategory));
 
 // CommonOptionsParser declares HelpMessage with a description of the common
 // command-line options related to the compilation database and input files.
@@ -26,6 +29,45 @@ static cl::extrahelp CommonHelp(CommonOptionsParser::HelpMessage);
 
 using namespace clang;
 using namespace clang::ast_matchers;
+
+class CodeGenerator
+{
+public:
+    static CodeGenerator& instance()
+    {
+        static CodeGenerator generator;
+        return generator;
+    }
+
+    void writeString(StringRef str) {
+        os_ << str;
+    }
+
+    ~CodeGenerator()
+    {
+        os_.flush();
+        std::string path = output_path;
+        if (path.back() != '/')
+        {
+            path.push_back('/');
+        }
+        path += "op_registry.cpp";
+        std::ofstream ofs(path);
+        if (!ofs.is_open())
+        {
+            llvm_unreachable("can't open file!");
+        }
+        ofs << buf_;
+        ofs.flush();
+        ofs.close();
+    }
+
+private:
+    CodeGenerator() : os_(buf_) {}
+
+    std::string buf_;
+    llvm::raw_string_ostream os_;
+};
 
 class RegistryCodegen : public MatchFinder::MatchCallback
 {
@@ -58,6 +100,8 @@ public:
 
 int main(int argc, const char** argv)
 {
+    (void)CodeGenerator::instance();
+    CodeGenerator::instance().writeString("");
     auto ExpectedParser = CommonOptionsParser::create(argc, argv, MyToolCategory, cl::Optional, nullptr);
     if (!ExpectedParser)
     {
