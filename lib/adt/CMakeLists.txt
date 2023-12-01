@@ -7,6 +7,4 @@ ref_counter_ptr.cpp
 shape_inference.cpp
 )
 
-add_library(adt OBJECT ${SOURCES})
-
-target_include_directories(adt PRIVATE ${PROJECT_SOURCE_DIR}/include)
+add_be_obj_target(adt ${SOURCES})

@@ -2,15 +2,28 @@ cmake_minimum_required(VERSION 3.12.0)
 
 project (tf-backend)
 
-set(CMAKE_CXX_FLAGS "-fPIC")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=0")
-
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 add_compile_options(-Wall -Wextra -Wno-unused-parameter 
 -Wno-unused-function -Wno-unused-result -Wno-missing-field-initializers 
 -Wno-unknown-pragmas -Wno-type-limits -Wno-array-bounds -Wno-unknown-pragmas 
--Wno-strict-overflow -Wno-strict-aliasing -Wno-missing-braces -Wno-uninitialized -Werror=return-type)
+-Wno-strict-overflow -Wno-strict-aliasing -Wno-missing-braces -Wno-uninitialized
+-Werror=return-type)
+
+# list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
+# find_package(CfgLLVM REQUIRED)
+
+set(backend_opts -D_GLIBCXX_USE_CXX11_ABI=0)
+set(tf_backend_targets)
+
+macro(add_be_obj_target target)
+    add_library(${target} OBJECT ${ARGN})
+    target_include_directories(${target} PRIVATE ${PROJECT_SOURCE_DIR}/include)
+    set_target_properties(${target} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    target_compile_options(${target} PRIVATE ${backend_opts})
+    target_compile_definitions(${target} PRIVATE FMT_HEADER_ONLY)
+    list(APPEND tf_backend_targets ${target})
+endmacro(add_be_obj_target)
 
 add_subdirectory(compiler)
 add_subdirectory(distribution)
@@ -18,6 +31,7 @@ add_subdirectory(lib)
 add_subdirectory(ops)
 add_subdirectory(python)
 add_subdirectory(runtime)
+# add_subdirectory(tools)
 
 # third_party
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/fmtlib)
@@ -40,7 +54,13 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/googletest)
 
 file(GLOB TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/test/cc_test/*.cpp")
 add_executable(UnitTest ${TEST_SOURCES})
-target_link_libraries(UnitTest gtest gtest_main tf_backend fmt)
+
+set_target_properties(UnitTest PROPERTIES COMPILE_FLAGS ${backend_opts})
+
+target_compile_options(gtest PRIVATE ${backend_opts})
+target_compile_options(gtest_main PRIVATE ${backend_opts})
+target_link_libraries(UnitTest gtest gtest_main fmt tf_backend)
+link_directories(${CMAKE_BINARY_DIR}/lib/tf_backend)
 
 add_test(NAME UnitTest COMMAND UnitTest)
 
