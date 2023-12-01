@@ -8,7 +8,8 @@ execute_process(
     ERROR_VARIABLE SCRIPT_ERROR
 )
 
+# for debug
 # Display the output and error messages
-message("Script result: ${SCRIPT_RESULT}")
-message("Script output: ${SCRIPT_OUTPUT}")
-message("Script error: ${SCRIPT_ERROR}")
+# message("Script result: ${SCRIPT_RESULT}")
+# message("Script output: ${SCRIPT_OUTPUT}")
+# message("Script error: ${SCRIPT_ERROR}")

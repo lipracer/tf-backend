@@ -3,6 +3,11 @@ cmake_minimum_required(VERSION 3.12.0)
 project (tf-backend)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+if(CMAKE_EXPORT_COMPILE_COMMANDS)
+    set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES})
+endif()
 
 add_compile_options(-Wall -Wextra -Wno-unused-parameter 
 -Wno-unused-function -Wno-unused-result -Wno-missing-field-initializers 
@@ -10,8 +15,12 @@ add_compile_options(-Wall -Wextra -Wno-unused-parameter
 -Wno-strict-overflow -Wno-strict-aliasing -Wno-missing-braces -Wno-uninitialized
 -Werror=return-type)
 
-# list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
-# find_package(CfgLLVM REQUIRED)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
+find_package(Options REQUIRED)
+
+if(ENABLE_REG_CODEGEN)
+    find_package(CfgLLVM REQUIRED)
+endif()
 
 set(backend_opts -D_GLIBCXX_USE_CXX11_ABI=0)
 set(tf_backend_targets)
@@ -31,7 +40,10 @@ add_subdirectory(lib)
 add_subdirectory(ops)
 add_subdirectory(python)
 add_subdirectory(runtime)
-# add_subdirectory(tools)
+
+if(ENABLE_REG_CODEGEN)
+    add_subdirectory(tools)
+endif()
 
 # third_party
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/fmtlib)

@@ -19,6 +19,8 @@ set(LLVM_BUILD_LIBRARY_DIR ${LLVM_BUILD_DIR}/lib)
 include(TableGen)
 include(AddLLVM)
 include(AddClang)
+include(ClangTargets)
+include(ClangConfig)
 include(HandleLLVMOptions)
 include_directories(${LLVM_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -58,3 +60,5 @@ clang_target_link_libraries(registry_codegen PRIVATE
   clangParse
   clangTidy
 )
+
+target_link_libraries(registry_codegen PRIVATE clang)
