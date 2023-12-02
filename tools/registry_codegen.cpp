@@ -3,7 +3,6 @@
 #include "clang/Tooling/CommonOptionsParser.h"
 #include "clang/Tooling/Tooling.h"
 // Declares llvm::cl::extrahelp.
-#include <fstream>
 
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/Frontend/TextDiagnosticPrinter.h"
@@ -36,12 +35,17 @@ constexpr char ClassTemplate[] = R"(
 class {0} : public tfbe::DeviceOpKernel<{0}>
 {
 public:
-    using DeviceOpKernel<{0}>::DeviceOpKernel;
+    {0}(tfbe::CompilerContext* ctx) : tfbe::DeviceOpKernel<{0}>(ctx) {{
+{1}
+    }
     void compute(tfbe::DeviceOpKernelContext* ctx)
     {{
-
-
+{2}
     }
+private:
+    struct CAttr {{
+{3}
+    } attrs_;
 };
 )";
 
@@ -51,6 +55,9 @@ constexpr char HeaderFiles[] = R"(
 #include "logger/logger.h"
 #include "op_registry.h"
 #include "type/tensor.h"
+#include "native_ops.h"
+
+// codegen file don't edit
 
 )";
 
@@ -59,33 +66,26 @@ class CodeGenerator
 public:
     static CodeGenerator& instance();
 
-    void writeString(StringRef str)
-    {
-        os_ << str;
-    }
-
-    class CodeEmiter
+    class CodeEmitter
     {
     public:
-        CodeEmiter(CodeGenerator* generator);
+        CodeEmitter(llvm::raw_ostream& os);
 
-        CodeEmiter& addInput(StringRef name, StringRef type);
-        CodeEmiter& addTensorInput(StringRef name);
+        CodeEmitter& addInput(StringRef name, StringRef type);
+        CodeEmitter& addTensorInput(StringRef name);
 
-        CodeEmiter& addName(StringRef name);
+        CodeEmitter& addName(StringRef name);
 
-        CodeEmiter& addAttr(StringRef key, StringRef value);
-        CodeEmiter& addOutput(StringRef name);
+        CodeEmitter& addAttr(StringRef key, StringRef value);
+        CodeEmitter& addOutput(StringRef name);
 
-        ~CodeEmiter();
+        ~CodeEmitter();
 
         void emitClass();
         void emitRegistry();
 
     private:
-        std::string buf_;
-        llvm::raw_string_ostream os_;
-        CodeGenerator* generator_;
+        llvm::raw_ostream& os_;
 
         std::string name_;
         SmallVector<std::pair<std::string, std::string>> inputs_;
@@ -93,7 +93,7 @@ public:
         std::string output_;
     };
 
-    CodeEmiter getEmiter();
+    CodeEmitter getEmitter();
 
     ~CodeGenerator()
     {
@@ -104,8 +104,10 @@ public:
             path.push_back('/');
         }
         path += "op_registry.cpp";
-        std::ofstream ofs(path);
-        if (!ofs.is_open())
+
+        std::error_code EC;
+        llvm::raw_fd_ostream ofs(path, EC);
+        if (EC.value() != 0)
         {
             llvm_unreachable("can't open file!");
         }
@@ -130,19 +132,91 @@ CodeGenerator& CodeGenerator::instance()
     return generator;
 }
 
-CodeGenerator::CodeEmiter CodeGenerator::getEmiter()
+CodeGenerator::CodeEmitter CodeGenerator::getEmitter()
 {
-    return CodeEmiter(this);
+    return CodeEmitter(os_);
 }
 
-CodeGenerator::CodeEmiter::CodeEmiter(CodeGenerator* generator) : os_(buf_), generator_(generator) {}
-
-void CodeGenerator::CodeEmiter::emitClass()
+class ScopeEmitter
 {
-    os_ << llvm::formatv(ClassTemplate, name_);
+public:
+    ScopeEmitter(size_t indent) : indent_(indent), os_(buf_) {}
+
+    template <typename T>
+    friend ScopeEmitter& operator<<(ScopeEmitter&, T&& t);
+
+    void newLine()
+    {
+        os_ << "\n";
+        for (size_t i = 0; i < indent_; ++i)
+        {
+            os_ << "\t";
+        }
+    }
+
+    std::string& str()
+    {
+        os_.flush();
+        return buf_;
+    }
+
+private:
+    size_t indent_;
+    std::string buf_;
+    llvm::raw_string_ostream os_;
+};
+
+template <typename T>
+ScopeEmitter& operator<<(ScopeEmitter& e, T&& t)
+{
+    e.os_ << std::forward<T>(t);
+    return e;
 }
 
-void CodeGenerator::CodeEmiter::emitRegistry()
+CodeGenerator::CodeEmitter::CodeEmitter(llvm::raw_ostream& os) : os_(os) {}
+
+void CodeGenerator::CodeEmitter::emitClass()
+{
+
+    ScopeEmitter initEmitter(2);
+    initEmitter.newLine();
+    initEmitter << "attrs_ = {";
+    llvm::interleaveComma(attrs_, initEmitter,
+                          [&](auto& str)
+                          {
+                              constexpr char fmt[] = R"(.{0} = ctx->getAttr<{1}>("{0}"))";
+                              initEmitter << llvm::formatv(fmt, str.first, str.second);
+                          });
+    initEmitter << "};";
+
+    ScopeEmitter callEmitter(2);
+    std::vector<std::string> params;
+    for (size_t i = 0; i < inputs_.size(); ++i)
+    {
+        params.push_back(std::string("ctx->input(") + std::to_string(i) + ")");
+    }
+    for (auto& attr : attrs_)
+    {
+        params.push_back(std::string("attrs_.") + attr.first);
+    }
+    callEmitter.newLine();
+    callEmitter << "auto result = " << "tfbe::autogen::" << name_.substr(1) << "(";
+    llvm::interleaveComma(params, callEmitter, [&](auto& str) { callEmitter << str; });
+    callEmitter << ");";
+
+    callEmitter.newLine();
+    callEmitter << "ctx->setOutput(0, result);";
+
+    ScopeEmitter attrEmitter(2);
+    for (auto& attr : attrs_)
+    {
+        attrEmitter.newLine();
+        attrEmitter << llvm::formatv("{0} {1};", attr.second, attr.first);
+    }
+    os_ << llvm::formatv(ClassTemplate, name_, initEmitter.str(), callEmitter.str(), attrEmitter.str());
+}
+
+void CodeGenerator::CodeEmitter::emitRegistry()
 {
     os_ << "\n";
     constexpr char RegistryStr[] = R"(REGISTER_KERNEL("{0}", {0}))";
@@ -160,39 +234,38 @@ void CodeGenerator::CodeEmiter::emitRegistry()
     os_ << ";\n";
 }
 
-CodeGenerator::CodeEmiter::~CodeEmiter()
+CodeGenerator::CodeEmitter::~CodeEmitter()
 {
     emitClass();
     emitRegistry();
     os_.flush();
-    generator_->writeString(buf_);
 }
 
-CodeGenerator::CodeEmiter& CodeGenerator::CodeEmiter::addName(StringRef name)
+CodeGenerator::CodeEmitter& CodeGenerator::CodeEmitter::addName(StringRef name)
 {
-    name_ = name.str();
+    name_ = "S" + name.str();
     return *this;
 }
 
-CodeGenerator::CodeEmiter& CodeGenerator::CodeEmiter::addInput(StringRef name, StringRef type)
+CodeGenerator::CodeEmitter& CodeGenerator::CodeEmitter::addInput(StringRef name, StringRef type)
 {
     inputs_.emplace_back(name.str(), type.str());
     return *this;
 }
 
-CodeGenerator::CodeEmiter& CodeGenerator::CodeEmiter::addTensorInput(StringRef name)
+CodeGenerator::CodeEmitter& CodeGenerator::CodeEmitter::addTensorInput(StringRef name)
 {
     inputs_.emplace_back(name.str(), "T");
     return *this;
 }
 
-CodeGenerator::CodeEmiter& CodeGenerator::CodeEmiter::addAttr(StringRef key, StringRef value)
+CodeGenerator::CodeEmitter& CodeGenerator::CodeEmitter::addAttr(StringRef key, StringRef value)
 {
     attrs_.emplace_back(key.str(), value.str());
     return *this;
 }
 
-CodeGenerator::CodeEmiter& CodeGenerator::CodeEmiter::addOutput(StringRef name)
+CodeGenerator::CodeEmitter& CodeGenerator::CodeEmitter::addOutput(StringRef name)
 {
     output_ = name.str();
     return *this;
@@ -216,18 +289,20 @@ public:
             {
                 return;
             }
-            auto emiter = CodeGenerator::instance().getEmiter();
-            emiter.addName(funcDecl->getName());
+            auto emitter = CodeGenerator::instance().getEmitter();
+            emitter.addName(funcDecl->getName());
             StringRef returnName = funcDecl->getDeclaredReturnType().getAsString();
             if (returnName == "Tensor")
             {
-                emiter.addOutput(returnName);
+                emitter.addOutput(returnName);
             }
-            for (const auto& param : llvm::make_range(funcDecl->param_begin(), funcDecl->param_end()))
+            auto paramList = funcDecl->parameters();
+            for (const auto& param : paramList)
             {
                 std::string typeName;
+                auto nonRefType = param->getType().getNonReferenceType();
                 auto pair = param->getType().split();
-                if (pair.asPair().first->isStandardLayoutType())
+                if (!nonRefType.isConstQualified())
                 {
                     typeName = param->getType().getAsString();
                 }
@@ -238,11 +313,11 @@ public:
 
                 if (typeName == "Tensor")
                 {
-                    emiter.addInput(param->getName(), "T");
+                    emitter.addInput(param->getName(), "T");
                 }
                 else
                 {
-                    emiter.addAttr(param->getName(), typeName);
+                    emitter.addAttr(param->getName(), typeName);
                 }
             }
         }
@@ -254,7 +329,6 @@ public:
 int main(int argc, const char** argv)
 {
     (void)CodeGenerator::instance();
-    CodeGenerator::instance().writeString("");
     auto ExpectedParser = CommonOptionsParser::create(argc, argv, MyToolCategory, cl::Optional, nullptr);
     if (!ExpectedParser)
     {
