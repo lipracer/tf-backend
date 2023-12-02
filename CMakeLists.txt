@@ -55,6 +55,15 @@ add_custom_target(plugin_target
 
 add_dependencies(plugin_target tf_backend)
 
+if(ENABLE_REG_CODEGEN)
+    add_custom_target(codegen_shell_target
+        COMMAND bash ${CMAKE_CURRENT_LIST_DIR}/script/run_codegen_tool.sh ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_LIST_DIR}
+        COMMENT "Running custom target command"
+    )
+    add_dependencies(codegen_shell_target registry_codegen)
+    add_dependencies(ops codegen_shell_target)
+endif()
+
 add_executable(dummy ${CMAKE_CURRENT_LIST_DIR}/tools/main.cpp)
 add_dependencies(dummy plugin_target)
 
