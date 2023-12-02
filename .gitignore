@@ -4,3 +4,5 @@ llvm_build/
 python/tf_backend.egg-info/
 *.whl
 python/tf_backend/*.so
+
+tools/registry_codegen.cpp

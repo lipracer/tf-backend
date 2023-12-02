@@ -22,6 +22,12 @@ class CompilerContext
 public:
     CompilerContext() = default;
 
+    template <typename T>
+    T getAttr(const std::string& key)
+    {
+        return {};
+    }
+
 private:
     CompilerContextImpl* impl_;
 };
