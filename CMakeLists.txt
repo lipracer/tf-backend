@@ -48,10 +48,11 @@ endif()
 # third_party
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/fmtlib)
 
-add_custom_target(plugin_target
-    COMMAND bash ${CMAKE_CURRENT_LIST_DIR}/script/build_plugin.sh 
-    COMMENT "Running custom target command"
-)
+if(ENABLE_BUILD_PLUGIN)
+add_custom_target(plugin_target COMMAND bash ${CMAKE_CURRENT_LIST_DIR}/script/build_plugin.sh COMMENT "Running custom target command")
+else()
+add_custom_target(plugin_target COMMAND bash ${CMAKE_CURRENT_LIST_DIR}/script/build_plugin.sh -l COMMENT "Running custom target command")
+endif()
 
 add_dependencies(plugin_target tf_backend)
 
@@ -61,8 +62,10 @@ if(ENABLE_REG_CODEGEN)
         COMMENT "Running custom target command"
     )
     add_dependencies(codegen_shell_target registry_codegen)
-    add_dependencies(ops codegen_shell_target)
+else()
+add_custom_target(codegen_shell_target COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_BINARY_DIR}/ops/native/op_registry.cpp COMMENT "Running custom target command")
 endif()
+add_dependencies(ops codegen_shell_target)
 
 add_executable(dummy ${CMAKE_CURRENT_LIST_DIR}/tools/main.cpp)
 add_dependencies(dummy plugin_target)

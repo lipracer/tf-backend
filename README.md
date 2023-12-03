@@ -15,8 +15,14 @@
 - build and install tensorflow  
 `bash script/build_plugin.sh -a`
 
-- build plugin and backend  
+- build backend  
 `cmake -S . -B build && cmake --build build`
+
+- build plugin and plugin  
+` cmake -S . -B build -DENABLE_BUILD_PLUGIN=ON`
+
+- if you need to enable codegen  
+` cmake -S . -B build -DENABLE_REG_CODEGEN=ON`
 
 - build whl  
 `pip wheel .`

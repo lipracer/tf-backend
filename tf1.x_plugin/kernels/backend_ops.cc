@@ -206,7 +206,7 @@ H2DOp::~H2DOp() {}
 void H2DOp::Compute(OpKernelContext* ctx)
 {
     LOCK_SCOPE;
-    LOG(INFO) << "H2DOp::Compute op name:" << ctx->op_kernel().name();
+    // LOG(INFO) << "H2DOp::Compute op name:" << ctx->op_kernel().name();
     auto deviceTensor = makeBeTensor(ctx->input(0));
     // cpu tensor we release immediately avoid leak
     // deviceTensor.getImpl()->increase_ref();
@@ -227,7 +227,7 @@ D2HOp::~D2HOp() {}
 void D2HOp::Compute(OpKernelContext* ctx)
 {
     LOCK_SCOPE;
-    LOG(INFO) << "D2HOp::Compute op name:" << ctx->op_kernel().name();
+    // LOG(INFO) << "D2HOp::Compute op name:" << ctx->op_kernel().name();
     {
         // need check input is tf or be
         auto deviceTensor = TfTensorToBeTensor(ctx->input(0));
@@ -245,8 +245,8 @@ BackendOp::~BackendOp() {}
 void BackendOp::Compute(OpKernelContext* ctx)
 {
     LOCK_SCOPE;
-    LOG(INFO) << "BackendOp::Compute op name:" << ctx->op_kernel().name()
-              << " kernel name:" << ctx->op_kernel().type_string().c_str();
+    // LOG(INFO) << "BackendOp::Compute op name:" << ctx->op_kernel().name()
+    //           << " kernel name:" << ctx->op_kernel().type_string().c_str();
     auto be_name = ctx->op_kernel().type_string().c_str();
     if (strstr(be_name, tfbe::OpNamePrefix))
     {

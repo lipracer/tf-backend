@@ -93,11 +93,11 @@ public:
         auto iter = map.find(node);
         if (iter == map.end())
         {
-            // LOG(INFO) << "can not find maped node of:" << node->DebugString();
-            // for (auto it : map)
-            // {
-            //     LOG(INFO) << it.first->DebugString() << "\nvs\n" << it.second.new_node->DebugString();
-            // }
+            LOG(INFO) << "can not find maped node of:" << node->DebugString();
+            for (auto it : map)
+            {
+                LOG(INFO) << it.first->DebugString() << "\nvs\n" << it.second.new_node->DebugString();
+            }
         }
 
         CHECK(iter != map.end());
@@ -172,10 +172,10 @@ void NodeReplacer::handleArgument(Node* node)
     Status status = builder.Finalize(graph_, &new_node);
     if (!status.ok())
     {
-        // LOG(INFO) << "backend_node error msg:" << status.error_message();
+        LOG(INFO) << "backend_node error msg:" << status.error_message();
     }
     // set_device(node, new_node);
-    // LOG(INFO) << "assigned_device_name:" << node->assigned_device_name();
+    LOG(INFO) << "assigned_device_name:" << node->assigned_device_name();
     new_node->set_assigned_device_name(node->assigned_device_name());
     auto insert_ret = node_map_.insert(std::make_pair(node, NodeWrap(node, new_node)));
     if (!insert_ret.second)
@@ -212,10 +212,10 @@ void NodeReplacer::handleReturn(Node* node)
     Status status = builder.Finalize(graph_, &new_node);
     if (!status.ok())
     {
-        // LOG(INFO) << "backend_node error msg:" << status.error_message();
+        LOG(INFO) << "backend_node error msg:" << status.error_message();
     }
     // set_device(new_node);
-    // LOG(INFO) << "assigned_device_name:" << node->assigned_device_name();
+    LOG(INFO) << "assigned_device_name:" << node->assigned_device_name();
     new_node->set_assigned_device_name(node->assigned_device_name());
     node_map_.insert(std::make_pair(node, NodeWrap(node, new_node)));
 
@@ -225,7 +225,7 @@ void NodeReplacer::handleReturn(Node* node)
 void NodeReplacer::handleNormalOp(Node* node)
 {
     bool need_fallback = !hsaBackendImplement(node);
-    // LOG(INFO) << "check hsaBackendImplement:" << !need_fallback;
+    LOG(INFO) << "check hsaBackendImplement:" << !need_fallback << " node string:" << node->DebugString();
 
     remove_nodes_.push_back(node);
     Node* new_node = nullptr;
@@ -254,11 +254,11 @@ void NodeReplacer::handleNormalOp(Node* node)
         Status status = builder.Finalize(graph_, &new_node);
         if (!status.ok())
         {
-            // LOG(INFO) << "backend_node error msg:" << status.error_message();
+            LOG(INFO) << "backend_node error msg:" << status.error_message();
             return nullptr;
         }
         // set_device(new_node);
-        // LOG(INFO) << "assigned_device_name:" << input->assigned_device_name();
+        LOG(INFO) << "assigned_device_name:" << input->assigned_device_name();
         new_node->set_assigned_device_name(input->assigned_device_name());
         return new_node;
     };
@@ -273,27 +273,28 @@ void NodeReplacer::handleNormalOp(Node* node)
         Status status = builder.Finalize(graph_, &new_node);
         if (!status.ok())
         {
-            // LOG(INFO) << "backend_node error msg:" << status.error_message();
+            LOG(INFO) << "backend_node error msg:" << status.error_message();
             return nullptr;
         }
         // set_device(new_node);
-        // LOG(INFO) << "assigned_device_name:" << input->assigned_device_name();
+        LOG(INFO) << "assigned_device_name:" << input->assigned_device_name();
         new_node->set_assigned_device_name(input->assigned_device_name());
         return new_node;
     };
 
-    std::vector<std::tuple<Node*, size_t, size_t>> new_inputs;
+    using inputs_desc = std::tuple<Node*, int, int>;
+    std::vector<inputs_desc> new_inputs;
     size_t input_index = 0;
     std::vector<const Edge*> extra_edges;
     for (auto edge : node->in_edges())
     {
         auto input = edge->src();
-        if (edge->dst_input() < 0)
+        if (edge->dst_input() < 0 || edge->src_output() < 0)
         {
             extra_edges.push_back(edge);
         }
-        // LOG(INFO) << "visit normal input:" << input->op_def().name() << " with dst index:" << edge->dst_input()
-                //   << " check hsaBackendImplement input:" << hsaBackendImplement(input);
+        LOG(INFO) << "visit normal input:" << input->op_def().name() << " with dst index:" << edge->dst_input()
+                  << " check hsaBackendImplement input:" << hsaBackendImplement(input);
         Node* new_input = nullptr;
         if (need_fallback)
         {
@@ -323,37 +324,59 @@ void NodeReplacer::handleNormalOp(Node* node)
         }
         new_inputs.emplace_back(new_input, edge->src_output(), edge->dst_input());
     }
+    std::sort(new_inputs.begin(), new_inputs.end(),
+              [](const std::tuple<Node*, int, int>& lhs, const std::tuple<Node*, int, int>& rhs)
+              { return std::get<2>(lhs) < std::get<2>(rhs); });
+
+#if 1
+
     if (node->op_def().name() == "DynamicStitch")
     {
         std::vector<NodeBuilder::NodeOut> inputList;
         std::transform(new_inputs.begin(), new_inputs.begin() + 2, std::back_inserter(inputList),
-                       [](std::tuple<Node*, size_t, size_t>& node) { return NodeBuilder::NodeOut(std::get<0>(node)); });
+                       [](inputs_desc& node) { return NodeBuilder::NodeOut(std::get<0>(node)); });
         builder.Input(inputList);
 
         inputList.clear();
         std::transform(new_inputs.begin() + 2, new_inputs.end(), std::back_inserter(inputList),
-                       [](std::tuple<Node*, size_t, size_t>& node) { return NodeBuilder::NodeOut(std::get<0>(node)); });
+                       [](inputs_desc& node) { return NodeBuilder::NodeOut(std::get<0>(node)); });
 
         builder.Input(inputList);
     }
     else
     {
-        new_inputs.resize(node->num_inputs());
-        for (; input_index < static_cast<size_t>(node->num_inputs()); ++input_index)
+        LOG(INFO) << "input size:" << node->num_inputs() << " new_inputs size:" << new_inputs.size() << " input_index:" << input_index;
+        // new_inputs.resize(node->num_inputs());
+        for (; input_index < new_inputs.size(); ++input_index)
         {
-            builder.Input(std::get<0>(new_inputs[input_index]), std::get<1>((new_inputs[input_index])));
+            LOG(INFO) << "src input index:" << std::get<1>(new_inputs[input_index]);
+            LOG(INFO) << "dst input index:" << std::get<2>(new_inputs[input_index]);
+            if (std::get<2>(new_inputs[input_index]) < 0)
+            {
+                continue;
+            }
+            builder.Input(std::get<0>(new_inputs[input_index]), std::get<1>(new_inputs[input_index]));
         }
     }
+#else
+    LOG(INFO) << "input size:" << node->num_inputs() << " new inputs size:" << new_inputs.size() << " input_index:" << input_index;
+    for (; input_index < new_inputs->size(); ++input_index)
+    {
+        LOG(INFO) << "src input index:" << std::get<1>(new_inputs[input_index]);
+        LOG(INFO) << "dst input index:" << std::get<2>(new_inputs[input_index]);
+        builder.Input(std::get<0>(new_inputs[input_index]), std::get<1>(new_inputs[input_index]));
+    }
+#endif
 
     Status status = builder.Finalize(graph_, &new_node);
-    // auto edge_iter = std::begin(node->in_edges());
+    auto edge_iter = std::begin(node->in_edges());
 
     if (node->op_def().name() == "Size")
     {
         for (auto edge : extra_edges)
         {
-            graph_->AddEdge(find_new_node_or_die(node_map_, edge->src()).new_node, edge->src_output(), new_node,
-                            edge->dst_input());
+            // graph_->AddEdge(find_new_node_or_die(node_map_, edge->src()).new_node, edge->src_output(), new_node,
+            //                 edge->dst_input());
         }
     }
     // std::advance(edge_iter, input_index);
@@ -365,11 +388,12 @@ void NodeReplacer::handleNormalOp(Node* node)
     // }
     if (!status.ok())
     {
-        // LOG(INFO) << "backend_node error msg:" << status.error_message();
-        // LOG(INFO) << "Node Debug String:" << node->DebugString();
+        LOG(INFO) << "backend_node error msg:" << status.error_message();
+        LOG(INFO) << "Node Debug String:" << node->DebugString();
     }
     // set_device(new_node);
-    // LOG(INFO) << "assigned_device_name:" << node->assigned_device_name();
+    LOG(INFO) << "assigned_device_name:" << node->DebugString();
+    LOG(INFO) << "assigned_device_name:" << node->assigned_device_name();
 
     new_node->set_assigned_device_name(node->assigned_device_name());
 
@@ -525,7 +549,7 @@ private:
 Status BuildBackendOpsPass::Run(const GraphOptimizationPassOptions& options)
 {
     Graph* graph = options.graph->get();
-    // LOG(INFO) << "graph:" << graph->ToGraphDefDebug().DebugString();
+    LOG(INFO) << "graph:" << graph->ToGraphDefDebug().DebugString();
     std::deque<Node*> all_nodes;
     bool isLegalGraph = false;
 
@@ -567,7 +591,7 @@ Status BuildBackendOpsPass::Run(const GraphOptimizationPassOptions& options)
         replacer.do_replace();
     }
 
-    // LOG(INFO) << "graph:" << graph->ToGraphDefDebug().DebugString();
+    LOG(INFO) << "graph:" << graph->ToGraphDefDebug().DebugString();
 
     return Status::OK();
 }

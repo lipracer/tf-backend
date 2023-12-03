@@ -5,7 +5,6 @@ cc_binary(
     name = "tf_plugin.so",
     srcs = [
         "tf_plugin.cc",
-        "//tensorflow/core/platform:file_system.cc",
     ],
     visibility = ["//visibility:public"],
     deps = [

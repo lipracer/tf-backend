@@ -51,9 +51,15 @@ BAZEL_DEBUG_OPT='--compilation_mode=dbg --copt=-g'
 # cp $PROJECT_DIR/third_party/tensorflow/bazel-out/k8-dbg/bin/tensorflow/compiler/jit/tf1.x_plugin/tf_plugin.so $PROJECT_DIR/build/lib/tf_backend
 
 # build release default
+
+if [ ! "-l" = "$1" ]; then
 bazelisk build --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" //tensorflow/compiler/jit/$TF_PLUGIN_NAME:tf_plugin.so
 cp $PROJECT_DIR/third_party/tensorflow/bazel-out/k8-opt/bin/tensorflow/compiler/jit/tf1.x_plugin/tf_plugin.so $PROJECT_DIR/build/lib/tf_backend
 rm -rf $TENSORFLOW_DIR/tensorflow/compiler/jit/$TF_PLUGIN_NAME
-
 rm -f .bazelversion
+cp $PROJECT_DIR/build/lib/tf_backend/tf_plugin.so $PROJECT_DIR/resource/
+else
+cp $PROJECT_DIR/resource/tf_plugin.so $PROJECT_DIR/build/lib/tf_backend
+fi
+
 cd -

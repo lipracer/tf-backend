@@ -34,7 +34,7 @@ jobs:
         git submodule update --init --recursive
         python script/apply_patch.py
         # bash script/build_plugin.sh -a
-        cmake -S . -B build
+        cmake -S . -B build -DENABLE_BUILD_PLUGIN=ON
         cmake --build build
         pip wheel .
 
@@ -42,6 +42,7 @@ jobs:
       run: |
         ls | grep whl | xargs -I {} pip install --force-reinstall {}
         python test/python/test_init.py
+        python test/model/mnist.py
         cd build
         ctest -R
 
