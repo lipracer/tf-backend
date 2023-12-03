@@ -371,14 +371,21 @@ void NodeReplacer::handleNormalOp(Node* node)
     Status status = builder.Finalize(graph_, &new_node);
     auto edge_iter = std::begin(node->in_edges());
 
-    if (node->op_def().name() == "Size")
+    // if (node->op_def().name() == "Size")
+    // {
+    //     for (auto edge : extra_edges)
+    //     {
+    //         graph_->AddEdge(find_new_node_or_die(node_map_, edge->src()).new_node, edge->src_output(), new_node,
+    //                         edge->dst_input());
+    //     }
+    // }
+
+    for (auto edge : extra_edges)
     {
-        for (auto edge : extra_edges)
-        {
-            // graph_->AddEdge(find_new_node_or_die(node_map_, edge->src()).new_node, edge->src_output(), new_node,
-            //                 edge->dst_input());
-        }
+        graph_->AddEdge(find_new_node_or_die(node_map_, edge->src()).new_node, edge->src_output(), new_node,
+                        edge->dst_input());
     }
+
     // std::advance(edge_iter, input_index);
     // for (; input_index < new_inputs.size(); ++input_index)
     // {
