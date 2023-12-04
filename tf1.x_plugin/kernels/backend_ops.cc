@@ -30,7 +30,7 @@
 #include "tensorflow/core/util/dump_graph.h"
 
 // #include "tensorflow/compiler/jit/tf1.x_plugin/include/adaptor.h"
-#include "tensorflow/compiler/jit/tf1.x_plugin/include/op_registry.h"
+#include "tensorflow/compiler/jit/tf1.x_plugin/include/capi/backend_api.h"
 
 namespace tensorflow
 {
@@ -248,13 +248,13 @@ void BackendOp::Compute(OpKernelContext* ctx)
     // LOG(INFO) << "BackendOp::Compute op name:" << ctx->op_kernel().name()
     //           << " kernel name:" << ctx->op_kernel().type_string().c_str();
     auto be_name = ctx->op_kernel().type_string().c_str();
-    if (strstr(be_name, tfbe::OpNamePrefix))
+    if (strstr(be_name, TfbeOpNamePrefix))
     {
-        be_name = be_name + strlen(tfbe::OpNamePrefix);
+        be_name = be_name + strlen(TfbeOpNamePrefix);
     }
-    auto op_def = tfbe::lookupOpDef(tfbe::getOpLibs(), be_name);
+    auto op_def = TfbeLookupOpDef(TfbeGetOpLibs(), be_name);
     size_t argsSize = ctx->num_inputs() + ctx->num_outputs();
-    tfbe::OpCallStack stack;
+    TfbeOpCallStack stack;
     stack.tensors = new tfbe::Tensor[argsSize];
     stack.size = argsSize;
     for (size_t i = 0; i < ctx->num_inputs(); ++i)
@@ -263,7 +263,7 @@ void BackendOp::Compute(OpKernelContext* ctx)
         stack.tensors[i] = tensor;
     }
 
-    tfbe::CallFrame(op_def, stack);
+    TfbeCallFrame(op_def, stack);
 
     // we need keep the output alive
     // TODO use alive analysis reduce the memory peak
@@ -290,15 +290,18 @@ class BackendOpImplResistry
 public:
     BackendOpImplResistry()
     {
-        for (const auto& it : tfbe::OpLibs::instance().libs())
-        {
-            string name = tfbe::OpNamePrefix + it->name();
-            auto& builder = ::tensorflow::KernelDefBuilder(name.c_str()).Device(DEVICE_CPU);
-            new ::tensorflow::kernel_factory::OpKernelRegistrar(
-                register_kernel::Name(name.c_str()).Device(DEVICE_CPU).Build(), "BackendOp",
-                [](::tensorflow::OpKernelConstruction* context) -> ::tensorflow::OpKernel*
-                { return new BackendOp(context); });
-        }
+        auto libs = TfbeGetOpLibs();
+        TfbeForeachOpLibs(
+            libs, +[](TfbeOpDef_t op_def) {
+                auto ref_name = TfbeGetOpDefName(op_def);
+                string name = TfbeOpNamePrefix + ref_name.str();
+                auto& builder = ::tensorflow::KernelDefBuilder(name.c_str()).Device(DEVICE_CPU);
+                new ::tensorflow::kernel_factory::OpKernelRegistrar(
+                    register_kernel::Name(name.c_str()).Device(DEVICE_CPU).Build(), "BackendOp",
+                    [](::tensorflow::OpKernelConstruction* context) -> ::tensorflow::OpKernel* {
+                        return new BackendOp(context);
+                    });
+            });
     }
 };
 

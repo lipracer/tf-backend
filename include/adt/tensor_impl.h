@@ -13,7 +13,6 @@
 
 namespace tfbe
 {
-
 template <typename T>
 using ShapeType = std::vector<T>;
 

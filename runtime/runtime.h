@@ -1,7 +1,7 @@
 #pragma once
 
+#include "adt/base_types.h"
 #include "device.h"
-#include "type/base_types.h"
 
 namespace tfbe
 {

@@ -1,7 +1,7 @@
-#include "type/ref_counter_ptr.h"
+#include "adt/ref_counter_ptr.h"
 
+#include "adt/tensor_impl.h"
 #include "logger/logger.h"
-#include "type/tensor_impl.h"
 
 namespace tfbe
 {

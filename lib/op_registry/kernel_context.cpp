@@ -1,7 +1,7 @@
 
 #include "kernel_context.h"
 
-#include "type/tensor.h"
+#include "adt/tensor.h"
 
 namespace tfbe
 {
@@ -14,7 +14,7 @@ public:
     Tensor input(size_t idx);
     void setOutput(size_t idx, Tensor tensor);
 
-    void pushStack(OpCallStack stack)
+    void pushStack(TfbeOpCallStack stack)
     {
         callStack_.push_back(stack);
     }
@@ -25,7 +25,7 @@ public:
     }
 
 private:
-    std::vector<OpCallStack> callStack_;
+    std::vector<TfbeOpCallStack> callStack_;
 };
 
 Tensor DeviceOpKernelContextImpl::input(size_t idx)
@@ -47,7 +47,7 @@ DeviceOpKernelContext::DeviceOpKernelContext()
     impl_ = std::make_shared<DeviceOpKernelContextImpl>();
 }
 
-void DeviceOpKernelContext::pushStack(OpCallStack stack)
+void DeviceOpKernelContext::pushStack(TfbeOpCallStack stack)
 {
     impl_->pushStack(stack);
 }

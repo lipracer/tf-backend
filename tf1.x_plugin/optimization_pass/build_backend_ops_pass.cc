@@ -154,7 +154,7 @@ bool isD2H(Node* node)
 
 bool NodeReplacer::hsaBackendImplement(Node* node)
 {
-    return tfbe::lookupOpDef(tfbe::getOpLibs(), node->op_def().name().c_str());
+    return TfbeLookupOpDef(TfbeGetOpLibs(), node->op_def().name().c_str()).data;
 }
 
 void NodeReplacer::handleArgument(Node* node)
@@ -231,9 +231,9 @@ void NodeReplacer::handleNormalOp(Node* node)
     Node* new_node = nullptr;
 
     auto node_name = !need_fallback ? "backend_node_" + std::to_string(node_index()) : node->name();
-    auto op_name = !need_fallback ? tfbe::OpNamePrefix + node->op_def().name() : node->op_def().name();
+    auto op_name = !need_fallback ? TfbeOpNamePrefix + node->op_def().name() : node->op_def().name();
     // NodeBuilder builder = need_fallback ? NodeBuilder(/*name*/ node_name,
-    //                                                   /*op name*/ tfbe::OpNamePrefix + node->op_def().name()) :
+    //                                                   /*op name*/ tfbe::TfbeOpNamePrefix + node->op_def().name()) :
     //                                       NodeBuilder(node_name, &node->op_def());
 
     NodeBuilder builder = NodeBuilder(/*name*/ node_name,

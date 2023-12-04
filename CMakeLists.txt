@@ -22,7 +22,8 @@ if(ENABLE_REG_CODEGEN)
     find_package(CfgLLVM REQUIRED)
 endif()
 
-set(backend_opts -D_GLIBCXX_USE_CXX11_ABI=0)
+set(backend_opts -D_GLIBCXX_USE_CXX11_ABI=1)
+
 set(tf_backend_targets)
 
 macro(add_be_obj_target target)

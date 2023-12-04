@@ -47,6 +47,6 @@ public:
 TEST(OpRegistryTest, register_op)
 {
     REGISTER_KERNEL("AddV2", AddV2).Input("T").Output("T").Attr("N > 0");
-    auto op_def = lookupOpDef(getOpLibs(), "AddV2");
-    EXPECT_EQ(op_def->name(), "AddV2");
+    auto op_def = TfbeLookupOpDef(TfbeGetOpLibs(), "AddV2");
+    EXPECT_EQ(reinterpret_cast<tfbe::OpDef*>(op_def.data)->name(), "AddV2");
 }

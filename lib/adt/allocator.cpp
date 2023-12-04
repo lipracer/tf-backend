@@ -1,5 +1,5 @@
 
-#include "type/allocator.h"
+#include "adt/allocator.h"
 
 #include <stdlib.h>
 

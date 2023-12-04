@@ -3,7 +3,7 @@
 // TODO: replace log.h
 #include <iostream>
 
-#include "type/tensor.h"
+#include "adt/tensor.h"
 
 struct LogWrapper
 {

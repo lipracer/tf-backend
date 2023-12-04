@@ -1,8 +1,8 @@
 
+#include "adt/tensor.h"
 #include "kernel_context.h"
 #include "logger/logger.h"
 #include "op_registry.h"
-#include "type/tensor.h"
 
 namespace tfbe
 {

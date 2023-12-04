@@ -1,4 +1,4 @@
-#include "type/tensor.h"
+#include "adt/tensor.h"
 
 #include <cmath>
 #include <functional>
@@ -8,9 +8,9 @@
 #include <string.h>
 
 #include "../runtime/runtime.h"
+#include "adt/tensor_impl.h"
 #include "internal/support.h"
 #include "logger/logger.h"
-#include "type/tensor_impl.h"
 
 namespace tfbe
 {

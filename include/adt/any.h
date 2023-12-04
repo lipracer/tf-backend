@@ -30,7 +30,6 @@ static std::string __support__demangle(const char* name)
 
 namespace tfbe
 {
-
 template <typename T>
 using VoidType = void;
 

@@ -3,8 +3,8 @@
 #include <thread>
 #include <vector>
 
+#include "adt/tensor.h"
 #include "gtest/gtest.h"
-#include "type/tensor.h"
 
 using namespace tfbe;
 

@@ -3,18 +3,19 @@
 
 #include <functional>
 #include <memory>
-#include <string>
 #include <unordered_map>
 #include <vector>
 
+#include "adt/ArrayRef.h"
+#include "adt/StringRef.h"
+#include "adt/iterator_range.h"
+#include "adt/tensor.h"
 #include "kernel_context.h"
 #include "macro.h"
-#include "type/tensor.h"
 
 namespace tfbe
 {
-
-using BoxedFunc = std::function<void(OpCallStack)>;
+using BoxedFunc = std::function<void(TfbeOpCallStack)>;
 
 class CompilerContext;
 class DeviceOpKernelContext;
@@ -45,7 +46,7 @@ public:
     }
 };
 
-constexpr const char OpNamePrefix[] = "BackendOp";
+class OpDefStorage;
 
 class BE_EXPORT OpDef
 {
@@ -53,22 +54,31 @@ public:
     using KernelObjT = std::shared_ptr<DeviceOpKernelBase>;
     using KernelCreatorT = std::function<KernelObjT(CompilerContext*)>;
 
-    std::string& name();
-    std::vector<std::string>& inputs();
-    std::vector<std::string>& outputs();
-    std::vector<std::string>& attrs();
+    // using string_range = iterator_range<mapped_iterator<std::vector<std::string>::const_iterator, StringRef>>;
+    using string_range = ArrayRef<std::string>;
+
+    StringRef name();
+    string_range inputs();
+    string_range outputs();
+    string_range attrs();
+
+    void setName(StringRef name);
+    void appendInputs(StringRef);
+    void appendOutputs(StringRef);
+    void appendAttrs(StringRef);
 
     KernelCreatorT& kernel_creator();
 
     const BoxedFunc& get_boxed_func() const;
     void set_boxed_func(const BoxedFunc&);
 
+    ~OpDef();
+
 private:
-    OpDef() = default;
-    std::string name_;
-    std::vector<std::string> inputs_;
-    std::vector<std::string> outputs_;
-    std::vector<std::string> attrs_;
+    OpDef();
+
+    OpDef(const OpDef& other) = delete;
+    OpDefStorage* storage_;
 
     mutable BoxedFunc boxedFunc_;
 
@@ -120,19 +130,6 @@ private:
     std::unordered_map<std::string, OpDef*> map_;
 };
 
-typedef void* BEOpLibs_t;
-
-BE_EXPORT void CallFrame(OpDef* op_def, OpCallStack stack);
-
-/* *
- * @brief
- * @name
- */
-BE_EXPORT OpDef* lookupOpDef(BEOpLibs_t libs, const char* name);
-
-BE_EXPORT CompilerContext* getCompilerContext();
-
-BE_EXPORT BEOpLibs_t getOpLibs();
 
 } // namespace tfbe
 

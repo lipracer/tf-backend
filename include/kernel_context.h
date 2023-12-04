@@ -3,17 +3,12 @@
 #include <memory>
 #include <vector>
 
-#include "type/tensor.h"
+#include "adt/tensor.h"
+#include "capi/backend_api.h"
 #include "device.h"
 
 namespace tfbe
 {
-
-struct OpCallStack
-{
-    Tensor* tensors;
-    size_t size;
-};
 
 class CompilerContextImpl;
 
@@ -39,7 +34,7 @@ class DeviceOpKernelContext
 public:
     DeviceOpKernelContext();
 
-    void pushStack(OpCallStack stack);
+    void pushStack(TfbeOpCallStack stack);
 
     void popStack();
 

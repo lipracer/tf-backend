@@ -1,15 +1,14 @@
 #pragma once
 #include <atomic>
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <type_traits>
 #include <utility>
-#include <cstddef>
 
 namespace tfbe
 {
-
 class RefCounter
 {
 public:

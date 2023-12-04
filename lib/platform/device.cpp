@@ -1,7 +1,7 @@
 #include "device.h"
 
+#include "adt/allocator.h"
 #include "logger/logger.h"
-#include "type/allocator.h"
 
 namespace tfbe
 {

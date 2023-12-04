@@ -1,6 +1,6 @@
 #pragma once
 
-#include "type/tensor.h"
+#include "adt/tensor.h"
 
 // !!!
 // NOTE: we must named all of parameter, then use this name for reflection in the codegen process

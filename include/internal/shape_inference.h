@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../type/tensor_impl.h"
+#include "../adt/tensor_impl.h"
 
 namespace tfbe
 {

@@ -3,11 +3,11 @@
 
 #include <stddef.h>
 #include <stdint.h>
+
 #include "../device.h"
 
 namespace tfbe
 {
-
 class Allocator
 {
 public:
@@ -22,7 +22,6 @@ public:
 class CpuAllocator : public Allocator
 {
 public:
-
     void* allocate(size_t size, DeviceInfo deviceInfo) override;
     void deallocate(void* ptr, DeviceInfo deviceInfo) override;
 };

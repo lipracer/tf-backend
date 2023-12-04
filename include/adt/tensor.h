@@ -13,7 +13,6 @@
 
 namespace tfbe
 {
-
 class BE_EXPORT Tensor
 {
 public:

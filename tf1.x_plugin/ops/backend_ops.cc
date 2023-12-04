@@ -53,25 +53,41 @@ class BackendResistry
 public:
     BackendResistry()
     {
-        for (const auto& it : tfbe::OpLibs::instance().libs())
-        {
-            string name = tfbe::OpNamePrefix + it->name();
-            auto wrap = ::tensorflow::register_op::OpDefBuilderWrapper<true>(name.c_str());
-            for (const auto& input : it->inputs())
-            {
-                wrap.Input(input);
-            }
-            for (const auto& output : it->outputs())
-            {
-                wrap.Output(output);
-            }
-            for (const auto& attr : it->attrs())
-            {
-                wrap.Attr(attr);
-            }
-            wrap.SetIsStateful().Doc(R"()");
-            new ::tensorflow::register_op::OpDefBuilderReceiver(wrap);
-        }
+        auto libs = TfbeGetOpLibs();
+        TfbeForeachOpLibs(
+            libs, +[](TfbeOpDef_t op_def) {
+                auto ref_name = TfbeGetOpDefName(op_def);
+                string name = TfbeOpNamePrefix + ref_name.str();
+                auto wrap = ::tensorflow::register_op::OpDefBuilderWrapper<true>(name.c_str());
+
+                {
+                    TfbeStringList* inputs = TfbeGetOpDefInputs(op_def);
+                    for (size_t i = 0; i < inputs->size; ++i)
+                    {
+                        wrap.Input(inputs->strs[i].str());
+                    }
+                    FreeTfbeStringList(inputs);
+                }
+                {
+                    TfbeStringList* outputs = TfbeGetOpDefOutputs(op_def);
+                    for (size_t i = 0; i < outputs->size; ++i)
+                    {
+                        wrap.Output(outputs->strs[i].str());
+                    }
+                    FreeTfbeStringList(outputs);
+                }
+                {
+                    TfbeStringList* attrs = TfbeGetOpDefAttributes(op_def);
+                    for (size_t i = 0; i < attrs->size; ++i)
+                    {
+                        wrap.Attr(attrs->strs[i].str());
+                    }
+                    FreeTfbeStringList(attrs);
+                }
+
+                wrap.SetIsStateful().Doc(R"()");
+                new ::tensorflow::register_op::OpDefBuilderReceiver(wrap);
+            });
     }
 };
 

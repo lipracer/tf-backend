@@ -51,11 +51,11 @@ private:
 
 constexpr char HeaderFiles[] = R"(
 
+#include "adt/tensor.h"
 #include "kernel_context.h"
 #include "logger/logger.h"
-#include "op_registry.h"
-#include "type/tensor.h"
 #include "native_ops.h"
+#include "op_registry.h"
 
 // codegen file don't edit
 
