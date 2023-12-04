@@ -9,23 +9,35 @@
 - update submodule  
 `git submodule update --init --recursive`
 
-- config tensorflow (optional)  
+- ~~config tensorflow (optional)~~  
 `cd third_party/tensorflow && python configure.py`
 
-- build and install tensorflow  
+- ~~build and install tensorflow~~  
 `bash script/build_plugin.sh -a`
 
-- build backend  
-`cmake -S . -B build && cmake --build build`
+- ~~build backend~~  
+  ```
+  cmake -S . -B build
+  cmake --build build
+  ```
 
-- build plugin and plugin  
-` cmake -S . -B build -DENABLE_BUILD_PLUGIN=ON`
+- build plugin and backend  
+  ```
+  cmake -S . -B build -DENABLE_BUILD_PLUGIN=ON
+  cmake --build build
+  ```
 
-- if you need to enable codegen  
-` cmake -S . -B build -DENABLE_REG_CODEGEN=ON`
+- if you need to enable op registry codegen  (***optional***)  
+  ```
+  bash script/build_llvm.sh
+  cmake -S . -B build -DENABLE_REG_CODEGEN=ON
+  cmake --build build
+  ```
 
 - build whl  
 `pip wheel .`
+
+***
 
 - run cpp test  
     ```
@@ -39,6 +51,7 @@
     python test/python/test_init.py
     python test/model/mnist.py
     ```
+***
 
 - model statistics
 
