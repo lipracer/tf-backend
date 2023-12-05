@@ -3,6 +3,9 @@
 - conda env  
 `conda create -n tensorflow-1.15 python=3.7`
 
+- install tensorflow's dependency  
+`pip install -r requirements.txt`
+
 - install bazelisk  
 `go install github.com/bazelbuild/bazelisk@latest`
 
