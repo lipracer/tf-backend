@@ -13,7 +13,7 @@ add_compile_options(-Wall -Wextra -Wno-unused-parameter
 -Wno-unused-function -Wno-unused-result -Wno-missing-field-initializers 
 -Wno-unknown-pragmas -Wno-type-limits -Wno-array-bounds -Wno-unknown-pragmas 
 -Wno-strict-overflow -Wno-strict-aliasing -Wno-missing-braces -Wno-uninitialized
--Werror=return-type)
+-Werror=return-type -Werror)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 find_package(Options REQUIRED)

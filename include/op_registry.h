@@ -42,7 +42,7 @@ public:
 
     void compute(DeviceOpKernelContext* ctx)
     {
-        EXPECT(false, "this function need derived class implement");
+        BE_EXPECT(false, "this function need derived class implement");
     }
 };
 
@@ -130,14 +130,13 @@ private:
     std::unordered_map<std::string, OpDef*> map_;
 };
 
-
 } // namespace tfbe
 
 #define TFBE_MACRO_CONCAT_IMPL(a, b) a##b
 #define TFBE_MACRO_CONCAT(a, b) TFBE_MACRO_CONCAT_IMPL(a, b)
 #define TFBE_MACRO_UNIQUE_NAME(a) TFBE_MACRO_CONCAT(a, __COUNTER__)
 
-#define REGISTER_KERNEL(name, kernel)                                                    \
-    static ::tfbe::OpDefBuilder TFBE_MACRO_UNIQUE_NAME(TFBE_REGISTER_) =                 \
-        ::tfbe::OpDefBuilder().OpName(name).KernelCreator([](tfbe::CompilerContext* ctx) \
-                                                          { return std::make_shared<kernel>(ctx); })
+#define REGISTER_KERNEL(name, kernel)                                                     \
+    [[maybe_unused]] static ::tfbe::OpDefBuilder TFBE_MACRO_UNIQUE_NAME(TFBE_REGISTER_) = \
+        ::tfbe::OpDefBuilder().OpName(name).KernelCreator(                                \
+            [](tfbe::CompilerContext* ctx) { return std::make_shared<kernel>(ctx); })

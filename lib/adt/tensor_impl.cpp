@@ -76,7 +76,7 @@ ElementType TensorImpl::elementType() const
 
 void* TensorImpl::data() const
 {
-    EXPECT(storage_->data(), "");
+    BE_EXPECT(storage_->data(), "");
     return storage_->data();
 }
 
@@ -127,7 +127,7 @@ TensorImpl* TensorImpl::reahspe(ArrayRef<DimT> new_shape)
 
 std::ostream& operator<<(std::ostream& os, const TensorImpl& tensor)
 {
-    EXPECT_EQ(tensor.elementType(), ElementType::Float32_t);
+    BE_EXPECT_EQ(tensor.elementType(), ElementType::Float32_t);
     os << tensor.getDeviceInfo();
     os << "(opaque:" << tensor.data() << ")";
     os << "(" << to_string(tensor.elementType()) << ")";

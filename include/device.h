@@ -25,7 +25,7 @@ public:
 
     DeviceInfo()
     {
-        EXPECT_NQ(type_, DeviceType::Invalid);
+        BE_EXPECT_NQ(type_, DeviceType::Invalid);
     }
     DeviceInfo(DeviceType type, int64_t device_id);
 
@@ -53,7 +53,7 @@ public:
         }
         else
         {
-            EXPECT(false, "unknown device!");
+            BE_EXPECT(false, "unknown device!");
         }
         str += ":" + std::to_string(device_id_);
         return str;

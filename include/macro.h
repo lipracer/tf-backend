@@ -9,21 +9,21 @@
         *reinterpret_cast<int*>(a) = 0; \
     } while (0);
 
-#define EXPECT(p, ...)                          \
+#define BE_EXPECT(p, ...)                       \
     do                                          \
     {                                           \
         if (!(p))                               \
             simple_be_unreachable(__VA_ARGS__); \
     } while (0)
 
-#define EXPECT_EQ(l, r, ...)                    \
+#define BE_EXPECT_EQ(l, r, ...)                 \
     do                                          \
     {                                           \
         if ((l) != (r))                         \
             simple_be_unreachable(__VA_ARGS__); \
     } while (0)
 
-#define EXPECT_NQ(l, r, ...)                    \
+#define BE_EXPECT_NQ(l, r, ...)                 \
     do                                          \
     {                                           \
         if ((l) == (r))                         \

@@ -1,9 +1,10 @@
 #pragma once
 
+#include <iosfwd>
+#include <string>
+
 #include <stddef.h>
 #include <string.h>
-#include <string>
-#include <iosfwd>
 
 namespace tfbe
 {
@@ -45,18 +46,18 @@ public:
         return std::string(str_, str_ + size_);
     }
 
-    bool operator==(const char* str)
+    bool operator==(const char* str) const
     {
         StringRef other(str);
         return *this == other;
     }
 
-    bool operator==(StringRef other)
+    bool operator==(StringRef other) const
     {
         return size_ == other.size_ && (str_ == other.str_ || !strcmp(str_, other.str_));
     }
 
-    bool operator!=(StringRef other)
+    bool operator!=(StringRef other) const
     {
         return !(*this == other);
     }

@@ -14,7 +14,6 @@
 
 namespace tfbe
 {
-
 //============================================================//
 // TensorStorage
 //============================================================//
@@ -118,7 +117,7 @@ DeviceInfo Tensor::getDeviceInfo() const
 FloatTensor::FloatTensor(DeviceInfo device_info, ArrayRef<DimT> shape, size_t bpe, bool is_std)
     : Tensor(device_info, shape)
 {
-    EXPECT_EQ(is_std, true);
+    BE_EXPECT_EQ(is_std, true);
     if (bpe == 16)
     {
         impl_->setElementType(ElementType::Float16_t);
@@ -168,8 +167,8 @@ Tensor empty_tensor(DeviceInfo info, ArrayRef<DimT> shape, ElementType ele_type,
 
 Tensor Tensor::operator+(const Tensor& rhs)
 {
-    EXPECT_EQ(elementType(), ElementType::Float32_t);
-    EXPECT_EQ(totalElements(), rhs.totalElements());
+    BE_EXPECT_EQ(elementType(), ElementType::Float32_t);
+    BE_EXPECT_EQ(totalElements(), rhs.totalElements());
     size_t size = std::max(totalElements(), rhs.totalElements());
     auto result = empty_tensor(getDeviceInfo(), shape(), elementType());
     for (size_t i = 0; i < size; ++i)
@@ -181,10 +180,10 @@ Tensor Tensor::operator+(const Tensor& rhs)
 
 Tensor Tensor::operator-()
 {
-    EXPECT_EQ(elementType(), ElementType::Float32_t);
+    BE_EXPECT_EQ(elementType(), ElementType::Float32_t);
     size_t lhsSize = totalElements();
     size_t rhsSize = totalElements();
-    EXPECT_EQ(lhsSize, rhsSize);
+    BE_EXPECT_EQ(lhsSize, rhsSize);
     auto result = empty_tensor(getDeviceInfo(), shape(), elementType());
     for (size_t i = 0; i < lhsSize; ++i)
     {
@@ -267,7 +266,7 @@ bool allCloseIntegral(const Tensor& lhs, const Tensor& rhs, double rtol = 1e-05,
 // absolute(a - b) <= (atol + rtol * absolute(b))
 bool allCloseFloating(const Tensor& lhs, const Tensor& rhs, double rtol, double atol, bool equal_nan)
 {
-    EXPECT_EQ(lhs.elementType(), ElementType::Float32_t);
+    BE_EXPECT_EQ(lhs.elementType(), ElementType::Float32_t);
     for (size_t i = 0; i < lhs.totalElements(); ++i)
     {
         auto lhs_value = *(lhs.data<float>() + i);

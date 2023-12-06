@@ -8,12 +8,12 @@ namespace tfbe
 
 DeviceInfo::DeviceInfo(DeviceType type, int64_t device_id) : type_(type), device_id_(device_id)
 {
-    EXPECT_NQ(type_, DeviceType::Invalid);
+    BE_EXPECT_NQ(type_, DeviceType::Invalid);
 }
 
 DeviceInfo::DeviceInfo(DeviceType type) : DeviceInfo(type, 0)
 {
-    EXPECT_NQ(type_, DeviceType::Invalid);
+    BE_EXPECT_NQ(type_, DeviceType::Invalid);
 }
 
 DeviceInfo DeviceInfo::CPUDevice(int64_t device_id)
@@ -62,7 +62,7 @@ Allocator* getAllocator(DeviceInfo info)
     }
     else
     {
-        EXPECT(false, "unknown device info!");
+        BE_EXPECT(false, "unknown device info!");
     }
     return {};
 }
