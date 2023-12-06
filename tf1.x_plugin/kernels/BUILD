@@ -1,7 +1,10 @@
 cc_library(
     name = "backend_ops",
     srcs = ["backend_ops.cc"],
-    hdrs = ["backend_ops.h"],
+    hdrs = [
+        "backend_ops.h", 
+        "adaptor.hpp"
+    ],
     visibility = ["//visibility:public"],
     deps = [
         "//tensorflow/compiler/jit:common",

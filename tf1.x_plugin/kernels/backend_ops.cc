@@ -15,7 +15,7 @@
 #include <dlfcn.h>
 #include <errno.h>
 
-#include "tensorflow/compiler/jit/tf1.x_plugin/include/adaptor.h"
+#include "tensorflow/compiler/jit/tf1.x_plugin/kernels/adaptor.hpp"
 #include "tensorflow/compiler/tf2xla/tf2xla.pb.h"
 #include "tensorflow/core/common_runtime/dma_helper.h"
 #include "tensorflow/core/common_runtime/function.h"
@@ -34,7 +34,6 @@
 
 namespace tensorflow
 {
-
 #define LOCK_SCOPE         \
     static std::mutex mtx; \
     std::lock_guard<std::mutex> _(mtx);
@@ -127,7 +126,8 @@ tfbe::ShapeType<tfbe::DimT> makeShape(const Tensor& tensor)
 tfbe::Tensor makeBeTensor(const Tensor& tensor)
 {
     tfbe::ShapeType<tfbe::DimT> shape = makeShape(tensor);
-    tfbe::Tensor deviceTensor = tfbe::empty_tensor(tfbe::DeviceType::CPU, shape, tfbe::ElementType::Float32_t, true);
+    tfbe::Tensor deviceTensor =
+        tfbe::empty_tensor(tfbe::DeviceType::CPU, shape, adaptor::cast_to_be(tensor.dtype()), true);
     memcpy(const_cast<void*>(deviceTensor.data()), const_cast<char*>(tensor.tensor_data().data()), tensor.TotalBytes());
     return deviceTensor;
 }
@@ -139,64 +139,12 @@ tfbe::Tensor TfTensorToBeTensor(const Tensor& tensor)
     return tfbe::Tensor(impl);
 }
 
-// enum DataType : int {
-//   DT_INVALID = 0,
-//   DT_FLOAT = 1,
-//   DT_DOUBLE = 2,
-//   DT_INT32 = 3,
-//   DT_UINT8 = 4,
-//   DT_INT16 = 5,
-//   DT_INT8 = 6,
-//   DT_STRING = 7,
-//   DT_COMPLEX64 = 8,
-//   DT_INT64 = 9,
-//   DT_BOOL = 10,
-//   DT_QINT8 = 11,
-//   DT_QUINT8 = 12,
-//   DT_QINT32 = 13,
-//   DT_BFLOAT16 = 14,
-//   DT_QINT16 = 15,
-//   DT_QUINT16 = 16,
-//   DT_UINT16 = 17,
-//   DT_COMPLEX128 = 18,
-//   DT_HALF = 19,
-//   DT_RESOURCE = 20,
-//   DT_VARIANT = 21,
-//   DT_UINT32 = 22,
-//   DT_UINT64 = 23,
-//   DT_FLOAT_REF = 101,
-//   DT_DOUBLE_REF = 102,
-//   DT_INT32_REF = 103,
-//   DT_UINT8_REF = 104,
-//   DT_INT16_REF = 105,
-//   DT_INT8_REF = 106,
-//   DT_STRING_REF = 107,
-//   DT_COMPLEX64_REF = 108,
-//   DT_INT64_REF = 109,
-//   DT_BOOL_REF = 110,
-//   DT_QINT8_REF = 111,
-//   DT_QUINT8_REF = 112,
-//   DT_QINT32_REF = 113,
-//   DT_BFLOAT16_REF = 114,
-//   DT_QINT16_REF = 115,
-//   DT_QUINT16_REF = 116,
-//   DT_UINT16_REF = 117,
-//   DT_COMPLEX128_REF = 118,
-//   DT_HALF_REF = 119,
-//   DT_RESOURCE_REF = 120,
-//   DT_VARIANT_REF = 121,
-//   DT_UINT32_REF = 122,
-//   DT_UINT64_REF = 123,
-//   DataType_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::min(),
-//   DataType_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::max()
-// };
-
 Tensor BeTensorToTfTensor(tfbe::Tensor tensor)
 {
     backendAllocator.setCurrentTensor(tensor.getImpl().get());
     std::vector<int64> vShape(std::begin(tensor.shape()), std::end(tensor.shape()));
     TensorShape* shape = new TensorShape(vShape);
-    return Tensor(&backendAllocator, DT_FLOAT, *shape);
+    return Tensor(&backendAllocator, adaptor::cast_to_tf(tensor.elementType()), *shape);
 }
 
 H2DOp::H2DOp(OpKernelConstruction* ctx) : OpKernel(ctx) {}
@@ -234,7 +182,7 @@ void D2HOp::Compute(OpKernelContext* ctx)
         deviceTensor = deviceTensor.to(tfbe::DeviceType::CPU);
         Tensor* output = nullptr;
         ctx->allocate_output(0, ctx->input(0).shape(), &output);
-        memcpy(const_cast<char*>(output->tensor_data().data()), deviceTensor.data<float>(), deviceTensor.numBytes());
+        memcpy(const_cast<char*>(output->tensor_data().data()), deviceTensor.data<char>(), deviceTensor.numBytes());
     }
 }
 

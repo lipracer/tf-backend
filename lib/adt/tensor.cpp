@@ -247,14 +247,14 @@ Tensor Tensor::broadcast(ArrayRef<DimT> shape)
 
 bool Tensor::isFloating() const
 {
-    CHECK_EQ(static_cast<int>(ElementType::Uint64_t) + 1, static_cast<int>(ElementType::Float16_t),
+    CHECK_EQ(static_cast<int>(ElementType::UInt64_t) + 1, static_cast<int>(ElementType::Float16_t),
              "need update this function!");
-    return static_cast<int>(elementType()) > static_cast<int>(ElementType::Uint64_t);
+    return static_cast<int>(elementType()) > static_cast<int>(ElementType::UInt64_t);
 }
 
 bool Tensor::isIntegral() const
 {
-    return static_cast<int>(elementType()) <= static_cast<int>(ElementType::Uint64_t);
+    return static_cast<int>(elementType()) <= static_cast<int>(ElementType::UInt64_t);
 }
 
 bool allCloseIntegral(const Tensor& lhs, const Tensor& rhs, double rtol = 1e-05, double atol = 1e-08,
@@ -324,17 +324,18 @@ std::string to_string(ElementType eleType)
     switch (eleType)
     {
         CASE_TYPE_TO_STR(ElementType::Int8_t);
-        CASE_TYPE_TO_STR(ElementType::Uint8_t);
+        CASE_TYPE_TO_STR(ElementType::Bool_t);
+        CASE_TYPE_TO_STR(ElementType::UInt8_t);
         CASE_TYPE_TO_STR(ElementType::Int16_t);
-        CASE_TYPE_TO_STR(ElementType::Uint16_t);
+        CASE_TYPE_TO_STR(ElementType::UInt16_t);
         CASE_TYPE_TO_STR(ElementType::Int32_t);
-        CASE_TYPE_TO_STR(ElementType::Uint32_t);
+        CASE_TYPE_TO_STR(ElementType::UInt32_t);
         CASE_TYPE_TO_STR(ElementType::Int64_t);
-        CASE_TYPE_TO_STR(ElementType::Uint64_t);
+        CASE_TYPE_TO_STR(ElementType::UInt64_t);
         CASE_TYPE_TO_STR(ElementType::Float16_t);
         CASE_TYPE_TO_STR(ElementType::Float32_t);
         CASE_TYPE_TO_STR(ElementType::Float64_t);
-        CASE_TYPE_TO_STR(ElementType::Bfoat16_t);
+        CASE_TYPE_TO_STR(ElementType::BFloat16_t);
         default:
         {
         }

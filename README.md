@@ -3,6 +3,7 @@
 - conda env  
     ```
     conda create -n tensorflow-1.15 python=3.7
+    conda activate tensorflow-1.15
     ```
 
 - install tensorflow's dependency  

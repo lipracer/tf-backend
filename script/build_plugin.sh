@@ -19,7 +19,7 @@ PLUGIN_DIR=$TENSORFLOW_DIR/tensorflow/compiler/jit
 cp -r $PROJECT_DIR/$TF_PLUGIN_NAME $PLUGIN_DIR
 cp -r $PROJECT_DIR/include $PLUGIN_DIR/$TF_PLUGIN_NAME
 
-BAZEL_OUT_DIR=`readlink -f $TENSORFLOW_DIR/bazel-out`
+# BAZEL_OUT_DIR=`readlink -f $TENSORFLOW_DIR/bazel-out`
 
 PYTHON_PAK_DIR=`pip show tensorflow | grep Location | awk '{print $2}'`
 TF_LIB_DIR=$PYTHON_PAK_DIR/tensorflow_core

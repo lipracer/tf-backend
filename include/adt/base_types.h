@@ -12,18 +12,19 @@ using DimT = int64_t;
 enum class ElementType
 {
     Unknown = 0,
+    Bool_t,
     Int8_t,
-    Uint8_t,
+    UInt8_t,
     Int16_t,
-    Uint16_t,
+    UInt16_t,
     Int32_t,
-    Uint32_t,
+    UInt32_t,
     Int64_t,
-    Uint64_t,
+    UInt64_t,
     Float16_t,
     Float32_t,
     Float64_t,
-    Bfoat16_t,
+    BFloat16_t,
 };
 
 std::string to_string(ElementType);
