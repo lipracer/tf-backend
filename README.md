@@ -1,16 +1,24 @@
 # tf-backend
 
 - conda env  
-`conda create -n tensorflow-1.15 python=3.7`
+    ```
+    conda create -n tensorflow-1.15 python=3.7
+    ```
 
 - install tensorflow's dependency  
-`pip install -r requirements.txt`
+    ```
+    pip install -r requirements.txt
+    ```
 
 - install bazelisk  
-`go install github.com/bazelbuild/bazelisk@latest`
+    ```
+    go install github.com/bazelbuild/bazelisk@latest
+    ```
 
 - update submodule  
-`git submodule update --init --recursive`
+    ```
+    git submodule update --init --recursive
+    ```
 
 - ~~config tensorflow (optional)~~  
 `cd third_party/tensorflow && python configure.py`
@@ -19,33 +27,34 @@
 `bash script/build_plugin.sh -a`
 
 - ~~build backend~~  
-  ```
-  cmake -S . -B build
-  cmake --build build
-  ```
+    ```
+    cmake -S . -B build
+    cmake --build build
+    ```
 
 - build plugin and backend  
-  ```
-  cmake -S . -B build -DENABLE_BUILD_PLUGIN=ON
-  cmake --build build
-  ```
+    ```
+    cmake -S . -B build -DENABLE_BUILD_PLUGIN=ON
+    cmake --build build
+    ```
 
 - if you need to enable op registry codegen  (***optional***)  
-  ```
-  bash script/build_llvm.sh
-  cmake -S . -B build -DENABLE_REG_CODEGEN=ON
-  cmake --build build
-  ```
+    ```
+    bash script/build_llvm.sh
+    cmake -S . -B build -DENABLE_REG_CODEGEN=ON
+    cmake --build build
+    ```
 
 - build whl  
-`pip wheel .`
+    ```
+    pip wheel .
+    ```
 
 ***
 
 - run cpp test  
     ```
-    pip install --force-reinstall tf_backend-1.0.0-py3-none-any.whl
-    python test/python/test_init.py
+    ctest -R
     ```
 
 - run python test  
