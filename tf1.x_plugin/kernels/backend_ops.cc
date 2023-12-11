@@ -127,7 +127,7 @@ tfbe::Tensor makeBeTensor(const Tensor& tensor)
 {
     tfbe::ShapeType<tfbe::DimT> shape = makeShape(tensor);
     tfbe::Tensor deviceTensor =
-        tfbe::empty_tensor(tfbe::DeviceType::CPU, shape, adaptor::cast_to_be(tensor.dtype()), true);
+        tfbe::empty_tensor(tfbe::DeviceType::CPU, tfbe::makeArrayRef(shape), adaptor::cast_to_be(tensor.dtype()), true);
     memcpy(const_cast<void*>(deviceTensor.data()), const_cast<char*>(tensor.tensor_data().data()), tensor.TotalBytes());
     return deviceTensor;
 }
