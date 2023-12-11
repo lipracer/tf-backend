@@ -11,12 +11,11 @@
 
 namespace tfbe
 {
-
-template <typename T, size_t S = 4, typename C = std::false_type>
+template <typename T, size_t S = 4, bool C = false>
 class ShapeTypeBase;
 
 template <typename T, size_t S>
-class ShapeTypeBase<T, S, std::true_type>
+class ShapeTypeBase<T, S, /*maybe we just need to special move and destroy functions*/ true>
 {
     struct ShapeTypeStorage
     {
@@ -40,7 +39,7 @@ public:
 
     using size_type = size_t;
 
-    using SelfType = ShapeTypeBase<T, S, std::true_type>;
+    using SelfType = ShapeTypeBase<T, S, true>;
 
     ShapeTypeBase()
     {
@@ -95,10 +94,7 @@ public:
 #endif
         if (size_ <= S)
         {
-            for (size_t i = 0; i < size_; ++i)
-            {
-                storage_.s.array[i] = std::move(other[i]);
-            }
+            std::move(other.storage_.s.array, other.storage_.s.array + size_, storage_.s.array);
         }
         else
         {
@@ -310,10 +306,10 @@ private:
 };
 
 template <typename T>
-class ShapeType : public ShapeTypeBase<T, 4, std::true_type>
+class ShapeType : public ShapeTypeBase<T, 4, std::is_trivial<T>::value>
 {
 public:
-    using ShapeTypeBase<T, 4, std::true_type>::ShapeTypeBase;
+    using ShapeTypeBase<T, 4, std::is_trivial<T>::value>::ShapeTypeBase;
 };
 
 template <typename T>

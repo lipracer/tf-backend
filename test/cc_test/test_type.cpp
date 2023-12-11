@@ -124,8 +124,11 @@ TEST(ShapeType, shape)
     std::vector<DimT> vemplace_back_s;
     for (size_t i = 0; i < 100; ++i)
     {
-        emplace_back_s.push_back(i + 1);
-        vemplace_back_s.push_back(i + 1);
+        emplace_back_s.emplace_back(i + 1);
+        vemplace_back_s.emplace_back(i + 1);
     }
     CHECK_SHAPE(emplace_back_s, vemplace_back_s);
+
+    EXPECT_EQ(push_back_s.capacity(), 128);
+    EXPECT_EQ(emplace_back_s.capacity(), 128);
 }

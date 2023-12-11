@@ -68,4 +68,11 @@ private:
     const_pointer data_ = nullptr;
     size_t size_ = 0;
 };
+
+template <typename T, template <typename N> typename C>
+ArrayRef<T> makeArrayRef(const C<T>& c)
+{
+    return ArrayRef<T>(c.data(), c.size());
+}
+
 } // namespace tfbe
