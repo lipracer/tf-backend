@@ -11,6 +11,6 @@ namespace autogen
 {
 Tensor AddVN(const Tensor& lhs, const Tensor& rhs);
 
-Tensor AddV3(const Tensor& lhs, const Tensor& rhs, float alpha);
+Tensor AddV3(const Tensor& lhs, const Tensor& rhs, float alpha, const std::vector<int>& shape);
 }
 } // namespace tfbe

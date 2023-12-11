@@ -23,6 +23,7 @@ TEST(TensorOperator, broadcast)
 
     std::vector<float> golden_values = {1.0f, 1.0f, 2.0f, 2.0f, 3.0f, 3.0f};
     auto golden_tensor = makeCconstantTensor(golden_values);
+    LOG(WARN) << new_tensor;
     EXPECT_TRUE(allClose(new_tensor, golden_tensor));
 }
 

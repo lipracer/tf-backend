@@ -37,7 +37,7 @@ size_t getTensorNumBytes(TensorImpl* impl)
 }
 
 TensorImpl::TensorImpl(DeviceInfo device_info, ArrayRef<DimT> shape, ElementType ele_type)
-    : shape_(shape.vec()), element_type_(ele_type), storage_(std::make_shared<TensorStorage>(device_info))
+    : shape_(shape.begin(), shape.end()), element_type_(ele_type), storage_(std::make_shared<TensorStorage>(device_info))
 {
     auto numBytes = TotalElements(shape) * ElementSize(ele_type);
     allocator_ = getAllocator(device_info);
@@ -61,7 +61,7 @@ size_t TensorImpl::numBytes() const
 
 ArrayRef<DimT> TensorImpl::shape() const
 {
-    return shape_;
+    return ArrayRef<DimT>(shape_.data(), shape_.size());
 }
 
 DimT TensorImpl::rank() const
@@ -92,7 +92,7 @@ const std::shared_ptr<TensorStorage>& TensorImpl::getStorage() const
 
 void TensorImpl::setShape(ArrayRef<DimT> shape)
 {
-    shape_ = shape.vec();
+    shape_ = ShapeType<DimT>(shape.begin(), shape.end());
 }
 
 void TensorImpl::setElementType(ElementType elementType)

@@ -306,6 +306,10 @@ public:
                 {
                     typeName = param->getType().getAsString();
                 }
+                else if (auto eT = nonRefType->getAs<RecordType>())
+                {
+                    typeName = eT->desugar().getAsString();
+                }
                 else
                 {
                     typeName = pair.asPair().first->getPointeeCXXRecordDecl()->getName();

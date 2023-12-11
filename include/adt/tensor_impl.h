@@ -10,11 +10,12 @@
 #include "base_types.h"
 #include "ref_counter_ptr.h"
 #include "tensor_storage.h"
+#include "shape_type.h"
 
 namespace tfbe
 {
-template <typename T>
-using ShapeType = std::vector<T>;
+// template <typename T>
+// using ShapeType = std::vector<T>;
 
 size_t ElementSize(ElementType ele_type);
 
