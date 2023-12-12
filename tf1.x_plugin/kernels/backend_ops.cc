@@ -143,8 +143,8 @@ Tensor BeTensorToTfTensor(tfbe::Tensor tensor)
 {
     backendAllocator.setCurrentTensor(tensor.getImpl().get());
     std::vector<int64> vShape(std::begin(tensor.shape()), std::end(tensor.shape()));
-    TensorShape* shape = new TensorShape(vShape);
-    return Tensor(&backendAllocator, adaptor::cast_to_tf(tensor.elementType()), *shape);
+    TensorShape shape(vShape);
+    return Tensor(&backendAllocator, adaptor::cast_to_tf(tensor.elementType()), shape);
 }
 
 H2DOp::H2DOp(OpKernelConstruction* ctx) : OpKernel(ctx) {}

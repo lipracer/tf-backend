@@ -35,6 +35,10 @@ macro(add_be_obj_target target)
     list(APPEND tf_backend_targets ${target})
 endmacro(add_be_obj_target)
 
+if(ENABLE_CUDA_DEVICE)
+    set(CUDA_HOME_DIR /usr/local/cuda)
+endif()
+
 add_subdirectory(compiler)
 add_subdirectory(distribution)
 add_subdirectory(lib)
@@ -44,6 +48,10 @@ add_subdirectory(runtime)
 
 if(ENABLE_REG_CODEGEN)
     add_subdirectory(tools)
+endif()
+
+if(ENABLE_CUDA_DEVICE)
+    target_compile_definitions(runtime PRIVATE USE_CUDA)
 endif()
 
 # third_party

@@ -26,3 +26,10 @@ set_target_properties(tf_backend
     COMPILE_FLAGS ${backend_opts}
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/tf_backend
 )
+
+
+if(ENABLE_CUDA_DEVICE)
+    target_link_directories(tf_backend PUBLIC ${CUDA_HOME_DIR}/lib64)
+    target_link_libraries(tf_backend PUBLIC cudart)
+    target_link_options(tf_backend PRIVATE "-Wl,-rpath,${CUDA_HOME_DIR}/lib64")
+endif()
