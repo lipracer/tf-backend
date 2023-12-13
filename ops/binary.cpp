@@ -14,17 +14,26 @@ public:
     {
         auto lhs = ctx->input(0);
         auto rhs = ctx->input(1);
-        Tensor ret;
-        if (lhs.totalElements() > rhs.totalElements())
+
+        auto cpu_lhs = lhs.to(DeviceType::CPU);
+        auto cpu_rhs = rhs.to(DeviceType::CPU);
+
+        if (cpu_lhs.totalElements() > cpu_rhs.totalElements())
         {
-            rhs = rhs.broadcast(lhs.shape());
+            cpu_rhs = cpu_rhs.broadcast(cpu_lhs.shape());
         }
-        else if (lhs.totalElements() < rhs.totalElements())
+        else if (cpu_lhs.totalElements() < cpu_rhs.totalElements())
         {
-            lhs = lhs.broadcast(rhs.shape());
+            cpu_lhs = cpu_lhs.broadcast(cpu_rhs.shape());
         }
-        ret = lhs + rhs;
-        ctx->setOutput(2, ret);
+        Tensor result = cpu_lhs + cpu_rhs;
+
+        LOG(INFO) << "lhs:" << cpu_lhs;
+        LOG(INFO) << "rhs:" << cpu_rhs;
+        LOG(INFO) << "result:" << result;
+
+        result = result.to(DeviceType::GPU);
+        ctx->setOutput(2, result);
     }
 };
 
@@ -34,8 +43,14 @@ public:
     using DeviceOpKernel<Neg>::DeviceOpKernel;
     void compute(DeviceOpKernelContext* ctx)
     {
-        auto lhs = ctx->input(0);
-        ctx->setOutput(1, -lhs);
+        auto input = ctx->input(0);
+        auto cpu_input = input.to(DeviceType::CPU);
+        auto result = -cpu_input;
+
+        LOG(INFO) << "input:" << cpu_input;
+        LOG(INFO) << "result:" << result;
+
+        ctx->setOutput(1, result.to(DeviceType::GPU));
     }
 };
 

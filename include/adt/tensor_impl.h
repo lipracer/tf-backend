@@ -24,6 +24,11 @@ inline size_t TotalElements(ArrayRef<DimT> shape)
     return ::std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<DimT>());
 }
 
+struct SerializeConfig
+{
+    size_t max_size = 64;
+};
+
 class TensorImpl : public RefCounterImpl<TensorImpl>
 {
 public:
@@ -61,6 +66,8 @@ public:
 
     TensorImpl* reahspe(ArrayRef<DimT> shape);
 
+    friend std::ostream& operator<<(std::ostream& os, const TensorImpl& tensor);
+
 protected:
     // TODO use TnesorImpl avoid the detail of implement
     ShapeType<DimT> shape_;
@@ -68,10 +75,11 @@ protected:
     std::shared_ptr<TensorStorage> storage_;
     Allocator* allocator_;
 
+    SerializeConfig serialize_cfg_;
+
     friend class Tensor;
 };
 
-std::ostream& operator<<(std::ostream& os, const TensorImpl& tensor);
 std::ostream& operator<<(std::ostream& os, ArrayRef<DimT> shape);
 
 } // namespace tfbe

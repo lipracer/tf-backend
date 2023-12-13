@@ -20,6 +20,8 @@ enum class DeviceType
 class BE_EXPORT DeviceInfo
 {
 public:
+    using DevId_t = int;
+
     static DeviceInfo CPUDevice(int64_t device_id);
     static DeviceInfo GPUDevice(int64_t device_id);
 
@@ -35,6 +37,11 @@ public:
     bool operator==(const DeviceInfo& other) const
     {
         return type_ == other.type_ && device_id_ == other.device_id_;
+    }
+
+    DevId_t devId() const
+    {
+        return static_cast<DevId_t>(device_id_);
     }
 
     bool isCPU();

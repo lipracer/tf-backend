@@ -9,11 +9,17 @@ namespace runtime
 {
 class RTErr_t
 {
+    using Value_t = int;
 public:
     RTErr_t() = default;
     RTErr_t(int v) : value_(v) {}
 
-    operator int()
+    template <typename T>
+    RTErr_t(T&& t) : value_(static_cast<Value_t>(t))
+    {
+    }
+
+    operator Value_t()
     {
         return value_;
     }
@@ -34,7 +40,7 @@ public:
     }
 
 private:
-    int value_ = 0;
+    Value_t value_ = 0;
 };
 
 inline bool isSuccess(const RTErr_t& code)
