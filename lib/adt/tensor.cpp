@@ -95,7 +95,7 @@ const IntrusivePtr<TensorImpl>& Tensor::getImpl() const
 Tensor Tensor::to(DeviceInfo device)
 {
     auto new_tensor = empty_tensor(device, shape(), elementType());
-    auto result = runtime::device_memcpy(new_tensor.data(), data(), numBytes(), getDeviceInfo(), device);
+    auto result = runtime::device_memcpy(new_tensor.data(), data(), numBytes(), device, getDeviceInfo());
     CHECK(runtime::isSuccess(result), "runtime error code {}!", static_cast<int>(result));
     return new_tensor;
 }

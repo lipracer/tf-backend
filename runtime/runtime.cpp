@@ -9,7 +9,7 @@
 #include "macro.h"
 
 #ifdef USE_CUDA
-#include <cuda_runtime_api.h>
+    #include <cuda_runtime_api.h>
 #else
 
 enum cudaMemcpyKind
@@ -30,10 +30,26 @@ tfbe::runtime::RTErr_t cudaMalloc(void** ptr, size_t size)
     return tfbe::runtime::success();
 }
 
+tfbe::runtime::RTErr_t cudaFree(void* ptr)
+{
+    free(ptr);
+    return tfbe::runtime::success();
+}
+
 template <typename T>
 tfbe::runtime::RTErr_t cudaMemcpy(void* dst, void* src, size_t size, T&& t)
 {
     memcpy(dst, src, size);
+    return tfbe::runtime::success();
+}
+
+tfbe::runtime::RTErr_t cudaSetDevice(...)
+{
+    return tfbe::runtime::success();
+}
+
+tfbe::runtime::RTErr_t cudaStreamSynchronize(void*)
+{
     return tfbe::runtime::success();
 }
 #endif
@@ -62,7 +78,7 @@ RTErr_t device_free(void* ptr)
 {
     if (ptr)
     {
-        free(ptr);
+        cudaFree(ptr);
     }
     return success();
 }
@@ -75,15 +91,24 @@ RTErr_t device_memcpy(void* dst, void* src, size_t size, DeviceInfo dst_dev, Dev
     }
     else if (src_dev.isGPU() && dst_dev.isCPU())
     {
-        cudaMemcpy(dst, src, size, cudaMemcpyDeviceToHost);
+        CHECK(isSuccess(cudaSetDevice(src_dev.devId())), "cudaSetDevice fail: device id:{}", src_dev.devId());
+        CHECK(isSuccess(cudaMemcpy(dst, src, size, cudaMemcpyDeviceToHost)),
+              "cudaMemcpyDeviceToHost fail dst:{}, src:{} size:{}", dst, src, size);
+        cudaStreamSynchronize(nullptr);
     }
     else if (src_dev.isCPU() && dst_dev.isGPU())
     {
-        cudaMemcpy(dst, src, size, cudaMemcpyHostToDevice);
+        CHECK(isSuccess(cudaSetDevice(dst_dev.devId())), "cudaSetDevice fail: device id:{}", src_dev.devId());
+        CHECK(isSuccess(cudaMemcpy(dst, src, size, cudaMemcpyHostToDevice)),
+              "cudaMemcpyHostToDevice fail dst:{}, src:{} size:{}", dst, src, size);
+        cudaStreamSynchronize(nullptr);
     }
     else if (src_dev.isGPU() && dst_dev.isGPU())
     {
-        cudaMemcpy(dst, src, size, cudaMemcpyDeviceToDevice);
+        CHECK(isSuccess(cudaSetDevice(src_dev.devId())), "cudaSetDevice fail: device id:{}", src_dev.devId());
+        CHECK(isSuccess(cudaMemcpy(dst, src, size, cudaMemcpyDeviceToDevice)),
+              "cudaMemcpyDeviceToDevice fail dst:{}, src:{} size:{}", dst, src, size);
+        cudaStreamSynchronize(nullptr);
     }
     else
     {

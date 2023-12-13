@@ -137,7 +137,8 @@ std::ostream& operator<<(std::ostream& os, const TensorImpl& tensor)
     {
         os << *(tensor.data<float>() + 0);
     }
-    for (size_t i = 1; i < tensor.totalElements(); ++i)
+    size_t serialize_size = std::min(tensor.serialize_cfg_.max_size, tensor.totalElements());
+    for (size_t i = 1; i < serialize_size; ++i)
     {
         os << "," << *(tensor.data<float>() + i);
     }
