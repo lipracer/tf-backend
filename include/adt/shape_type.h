@@ -45,7 +45,6 @@ public:
     {
         memset(&storage_, 0, sizeof(storage_));
         size_ = 0;
-        storage_.capacity = S;
     }
 
     ShapeTypeBase(const std::initializer_list<T>& l) : ShapeTypeBase()
@@ -110,10 +109,7 @@ public:
 
     ~ShapeTypeBase()
     {
-        if (size_ > S)
-        {
-            free(storage_.s.data);
-        }
+        release_heap_memory();
     }
 
     void push_back(const T& v)
@@ -183,7 +179,7 @@ public:
 
     size_type capacity() const
     {
-        return storage_.capacity;
+        return storage_.capacity != 0 ? storage_.capacity : S;
     }
 
     void resize(size_t size, const_reference d = {})
@@ -201,9 +197,7 @@ public:
 
     void clear()
     {
-        memset(&storage_, 0, sizeof(storage_));
         size_ = 0;
-        storage_.capacity = S;
     }
 
     void reserve(size_t size)
@@ -212,7 +206,7 @@ public:
         {
             return;
         }
-        auto ptr = allocStorage(storage_.capacity << 1);
+        auto ptr = allocStorage(capacity() << 1);
         storage_.s.data = ptr;
     }
 
@@ -252,13 +246,13 @@ private:
     {
         if (size > S)
         {
-            if (size <= storage_.capacity)
+            if (size <= capacity())
             {
                 return storage_.s.data;
             }
             else
             {
-                auto ptr = allocStorage(storage_.capacity << 1);
+                auto ptr = allocStorage(capacity() << 1);
                 if (!isStackStorage())
                 {
                     std::copy(storage_.s.data, storage_.s.data + size_, ptr);
@@ -298,6 +292,14 @@ private:
     bool isStackStorage()
     {
         return size_ <= S;
+    }
+
+    void release_heap_memory()
+    {
+        if (size_ > S)
+        {
+            free(storage_.s.data);
+        }
     }
 
 private:
