@@ -39,6 +39,8 @@ if(ENABLE_CUDA_DEVICE)
     set(CUDA_HOME_DIR /usr/local/cuda)
 endif()
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/fmtlib/include)
+
 add_subdirectory(compiler)
 add_subdirectory(distribution)
 add_subdirectory(lib)

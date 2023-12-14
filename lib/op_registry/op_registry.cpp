@@ -1,6 +1,9 @@
 #include "op_registry.h"
+
 #include <utility>
+
 #include <string.h>
+
 #include "logger/logger.h"
 
 namespace tfbe
@@ -16,6 +19,7 @@ struct OpDefStorage
     std::vector<std::string> inputs;
     std::vector<std::string> outputs;
     std::vector<std::string> attrs;
+    int64_t priority = 0;
 };
 
 OpDef::OpDef() : storage_(new OpDefStorage()) {}
@@ -24,23 +28,28 @@ OpDef::~OpDef()
     delete storage_;
 }
 
-StringRef OpDef::name()
+StringRef OpDef::name() const
 {
     return storage_->name;
 }
 
-OpDef::string_range OpDef::inputs()
+OpDef::string_range OpDef::inputs() const
 {
     return storage_->inputs;
 }
 
-OpDef::string_range OpDef::outputs()
+OpDef::string_range OpDef::outputs() const
 {
     return storage_->outputs;
 }
-OpDef::string_range OpDef::attrs()
+OpDef::string_range OpDef::attrs() const
 {
     return storage_->attrs;
+}
+
+int64_t OpDef::priority() const
+{
+    return storage_->priority;
 }
 
 void OpDef::setName(StringRef name)
@@ -60,12 +69,18 @@ void OpDef::appendAttrs(StringRef str)
     storage_->attrs.push_back(str.str());
 }
 
+void OpDef::setPriority(int64_t p)
+{
+    storage_->priority = p;
+}
+
 // TODO refine this, split to compile time and runtime
 const BoxedFunc& OpDef::get_boxed_func() const
 {
     if (!boxedFunc_)
     {
-        boxedFunc_ = [&](TfbeOpCallStack stack) mutable -> void {
+        boxedFunc_ = [&](TfbeOpCallStack stack) mutable -> void
+        {
             auto cctx = new CompilerContext();
             auto kernel = this->kernel_creator_(cctx);
             auto rctx = new DeviceOpKernelContext();
@@ -121,14 +136,21 @@ OpDefBuilder OpDefBuilder::Device(const std::string& str)
     return *this;
 }
 
+OpDefBuilder OpDefBuilder::Priority(int64_t p)
+{
+    op_def_->setPriority(p);
+    return *this;
+}
+
 OpDefBuilder OpDefBuilder::KernelCreator(const OpDef::KernelCreatorT& creator)
 {
     op_def_->kernel_creator() = creator;
     return *this;
 }
 
-OpDefBuilder::OpDefBuilder()
+OpDefBuilder::OpDefBuilder(StringRef file)
 {
+    LOG(INFO) << "registe op name:" << file;
     op_def_ = new OpDef();
 }
 
@@ -138,25 +160,37 @@ OpDefBuilder::OpDefBuilder()
 
 OpDef& OpLibs::emplace_lib(OpDef* opdef)
 {
+    std::lock_guard<std::mutex> lg(libs_mtx_);
     libs_.emplace_back(std::move(opdef));
-    map_.insert(std::make_pair(libs_.back()->name().c_str(), libs_.back().get()));
+    map_[libs_.back()->name().c_str()].insert(libs_.back().get());
     return *libs_.back();
 }
 
 OpDef* OpLibs::lookup(const char* name)
 {
+    std::lock_guard<std::mutex> lg(libs_mtx_);
     auto iter = map_.find(name);
     if (iter == map_.end())
     {
         return nullptr;
     }
-    return iter->second;
+    return *iter->second.begin();
 }
 
 OpLibs& OpLibs::instance()
 {
     static OpLibs __instance;
     return __instance;
+}
+
+OpLibs::Iterator OpLibs::begin() const
+{
+    return OpLibs::Iterator(map_.begin());
+}
+
+OpLibs::Iterator OpLibs::end() const
+{
+    return OpLibs::Iterator(map_.end());
 }
 
 // don't use &&, the template args is real args
@@ -176,5 +210,12 @@ struct ForwardHelper
         func(stack.tensors[Idx]...);
     }
 };
+
+std::ostream& operator<<(std::ostream& os, const OpDef& op_def)
+{
+    os << "{"
+       << "name:" << op_def.name().c_str() << ", priority:" << op_def.priority() << "}";
+    return os;
+}
 
 } // namespace tfbe

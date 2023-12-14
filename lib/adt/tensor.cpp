@@ -62,7 +62,7 @@ size_t Tensor::numBytes() const
     return impl_->numBytes();
 }
 
-ArrayRef<DimT> Tensor::shape()
+ArrayRef<DimT> Tensor::shape() const
 {
     return impl_->shape();
 }
@@ -92,7 +92,7 @@ const IntrusivePtr<TensorImpl>& Tensor::getImpl() const
     return impl_;
 }
 
-Tensor Tensor::to(DeviceInfo device)
+Tensor Tensor::to(DeviceInfo device) const
 {
     auto new_tensor = empty_tensor(device, shape(), elementType());
     auto result = runtime::device_memcpy(new_tensor.data(), data(), numBytes(), device, getDeviceInfo());

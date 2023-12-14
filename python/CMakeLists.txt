@@ -16,6 +16,7 @@ target_link_libraries(tf_backend PUBLIC $<TARGET_OBJECTS:device>)
 target_link_libraries(tf_backend PUBLIC $<TARGET_OBJECTS:ops>)
 target_link_libraries(tf_backend PUBLIC $<TARGET_OBJECTS:runtime>)
 target_link_libraries(tf_backend PUBLIC $<TARGET_OBJECTS:capi>)
+target_link_libraries(tf_backend PUBLIC $<TARGET_OBJECTS:native_ops>)
 
 
 target_link_libraries(tf_backend PRIVATE fmt::fmt-header-only)

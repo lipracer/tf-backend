@@ -1,6 +1,9 @@
-set(SOURCES native_ops.cpp op_registry.cpp)
+#set(codegen_registry_file ${CMAKE_CURRENT_BINARY_DIR}/ops/native/native_op_registry.cpp)
+#set(SOURCES native_ops.cpp codegen_registry_file)
 
-set_source_files_properties(op_registry.cpp PROPERTIES GENERATED TRUE)
+set(SOURCES native_ops.cpp native_op_registry.cpp)
+
+set_source_files_properties(native_op_registry.cpp PROPERTIES GENERATED TRUE)
 
 # file(GLOB SOURCES ${CMAKE_CURRENT_LIST_DIR}/*.cpp)
 

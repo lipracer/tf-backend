@@ -35,7 +35,7 @@ constexpr char ClassTemplate[] = R"(
 class {0} : public tfbe::DeviceOpKernel<{0}>
 {
 public:
-    {0}(tfbe::CompilerContext* ctx) : tfbe::DeviceOpKernel<{0}>(ctx) {{
+    {0}(const tfbe::CompilerContext* ctx) : tfbe::DeviceOpKernel<{0}>(ctx) {{
 {1}
     }
     void compute(tfbe::DeviceOpKernelContext* ctx)
@@ -103,7 +103,7 @@ public:
         {
             path.push_back('/');
         }
-        path += "op_registry.cpp";
+        path += "native_op_registry.cpp";
 
         std::error_code EC;
         llvm::raw_fd_ostream ofs(path, EC);
@@ -177,7 +177,6 @@ CodeGenerator::CodeEmitter::CodeEmitter(llvm::raw_ostream& os) : os_(os) {}
 
 void CodeGenerator::CodeEmitter::emitClass()
 {
-
     ScopeEmitter initEmitter(2);
     initEmitter.newLine();
     initEmitter << "attrs_ = {";
@@ -200,12 +199,13 @@ void CodeGenerator::CodeEmitter::emitClass()
         params.push_back(std::string("attrs_.") + attr.first);
     }
     callEmitter.newLine();
-    callEmitter << "auto result = " << "tfbe::autogen::" << name_.substr(1) << "(";
+    callEmitter << "auto result = "
+                << "tfbe::autogen::" << name_ << "(";
     llvm::interleaveComma(params, callEmitter, [&](auto& str) { callEmitter << str; });
     callEmitter << ");";
 
     callEmitter.newLine();
-    callEmitter << "ctx->setOutput(0, result);";
+    callEmitter << llvm::formatv("ctx->setOutput({0}, result);", inputs_.size());
 
     ScopeEmitter attrEmitter(2);
     for (auto& attr : attrs_)
@@ -231,6 +231,7 @@ void CodeGenerator::CodeEmitter::emitRegistry()
     {
         os_ << llvm::formatv(".Attr(\"{0} : {1}\")", attr.first, attr.second);
     }
+    os_ << ".Priority(1).Attr(\"T: type\")";
     os_ << ";\n";
 }
 
@@ -243,7 +244,7 @@ CodeGenerator::CodeEmitter::~CodeEmitter()
 
 CodeGenerator::CodeEmitter& CodeGenerator::CodeEmitter::addName(StringRef name)
 {
-    name_ = "S" + name.str();
+    name_ = name.str();
     return *this;
 }
 
@@ -315,7 +316,7 @@ public:
                     typeName = pair.asPair().first->getPointeeCXXRecordDecl()->getName();
                 }
 
-                if (typeName == "Tensor")
+                if (typeName.find("Tensor") != std::string::npos)
                 {
                     emitter.addInput(param->getName(), "T");
                 }

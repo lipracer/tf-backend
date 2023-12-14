@@ -3,6 +3,8 @@
 
 #include <functional>
 #include <memory>
+#include <mutex>
+#include <set>
 #include <unordered_map>
 #include <vector>
 
@@ -25,7 +27,7 @@ class DeviceOpKernelBase
 public:
     using Base = DeviceOpKernelBase;
     // this func wiil called at compile time you need save the constant value to youer kernel
-    DeviceOpKernelBase(CompilerContext* ctx) {}
+    DeviceOpKernelBase(const CompilerContext* ctx) {}
 
     virtual void compute_impl(DeviceOpKernelContext* ctx) = 0;
 };
@@ -52,20 +54,22 @@ class BE_EXPORT OpDef
 {
 public:
     using KernelObjT = std::shared_ptr<DeviceOpKernelBase>;
-    using KernelCreatorT = std::function<KernelObjT(CompilerContext*)>;
+    using KernelCreatorT = std::function<KernelObjT(const CompilerContext*)>;
 
     // using string_range = iterator_range<mapped_iterator<std::vector<std::string>::const_iterator, StringRef>>;
     using string_range = ArrayRef<std::string>;
 
-    StringRef name();
-    string_range inputs();
-    string_range outputs();
-    string_range attrs();
+    StringRef name() const;
+    string_range inputs() const;
+    string_range outputs() const;
+    string_range attrs() const;
+    int64_t priority() const;
 
     void setName(StringRef name);
     void appendInputs(StringRef);
     void appendOutputs(StringRef);
     void appendAttrs(StringRef);
+    void setPriority(int64_t p);
 
     KernelCreatorT& kernel_creator();
 
@@ -86,24 +90,26 @@ private:
     KernelCreatorT kernel_creator_;
 
     friend class OpDefBuilder;
+    friend std::ostream& operator<<(std::ostream& os, const OpDef& op_def);
 };
 
 class BE_EXPORT OpDefBuilder
 {
 public:
-    OpDefBuilder();
+    OpDefBuilder(StringRef file);
 
     OpDefBuilder OpName(const std::string& str);
     OpDefBuilder Input(const std::string& str);
     OpDefBuilder Output(const std::string& str);
     OpDefBuilder Attr(const std::string& str);
     OpDefBuilder Device(const std::string& str);
+    OpDefBuilder Priority(int64_t p);
 
-    template <typename... ArgsT, typename... ResultsT>
-    OpDefBuilder Kernel(void (*func)(ArgsT..., ResultsT...))
-    {
-        return {};
-    }
+    // template <typename... ArgsT, typename... ResultsT>
+    // OpDefBuilder Kernel(void (*func)(ArgsT..., ResultsT...))
+    // {
+    //     return {};
+    // }
 
     OpDefBuilder KernelCreator(const OpDef::KernelCreatorT& creator);
 
@@ -113,21 +119,77 @@ private:
 
 class BE_EXPORT OpLibs
 {
+    struct OpDefCompare
+    {
+        bool operator()(const OpDef* lhs, const OpDef* rhs) const
+        {
+            return lhs->priority() >= rhs->priority();
+        }
+    };
+
 public:
     static OpLibs& instance();
+
+    using OIterator = std::unordered_map<std::string, std::set<OpDef*, class OpDefCompare>>::const_iterator;
+
+    struct Iterator
+    {
+        Iterator() = default;
+        Iterator(OIterator iterator) : iterator_(iterator) {}
+        Iterator operator++()
+        {
+            return Iterator(++iterator_);
+        }
+        Iterator operator++(int)
+        {
+            return Iterator(iterator_++);
+        }
+
+        OpDef& operator*()
+        {
+            return *operator->();
+        }
+        const OpDef& operator*() const
+        {
+            return *operator->();
+        }
+        OpDef* operator->()
+        {
+            return *iterator_->second.begin();
+        }
+
+        const OpDef* operator->() const
+        {
+            return *iterator_->second.begin();
+        }
+
+        bool operator==(const Iterator& other) const
+        {
+            return iterator_ == other.iterator_;
+        }
+
+        bool operator!=(const Iterator& other) const
+        {
+            return !(*this == other);
+        }
+
+    private:
+        OIterator iterator_;
+    };
 
     OpDef& emplace_lib(OpDef* opdef);
     // if can not find return null
     OpDef* lookup(const char* name);
 
-    const std::vector<std::unique_ptr<OpDef>>& libs() const
-    {
-        return libs_;
-    }
+    Iterator begin() const;
+
+    Iterator end() const;
 
 private:
+    OpLibs() = default;
     std::vector<std::unique_ptr<OpDef>> libs_;
-    std::unordered_map<std::string, OpDef*> map_;
+    std::unordered_map<std::string, std::set<OpDef*, OpDefCompare>> map_;
+    std::mutex libs_mtx_;
 };
 
 } // namespace tfbe
@@ -136,7 +198,7 @@ private:
 #define TFBE_MACRO_CONCAT(a, b) TFBE_MACRO_CONCAT_IMPL(a, b)
 #define TFBE_MACRO_UNIQUE_NAME(a) TFBE_MACRO_CONCAT(a, __COUNTER__)
 
-#define REGISTER_KERNEL(name, kernel)                                                     \
-    [[maybe_unused]] static ::tfbe::OpDefBuilder TFBE_MACRO_UNIQUE_NAME(TFBE_REGISTER_) = \
-        ::tfbe::OpDefBuilder().OpName(name).KernelCreator(                                \
-            [](tfbe::CompilerContext* ctx) { return std::make_shared<kernel>(ctx); })
+#define REGISTER_KERNEL(name, kernel)                                                                  \
+    [[maybe_unused]] static ::tfbe::OpDefBuilder TFBE_MACRO_UNIQUE_NAME(TFBE_REGISTER_) =              \
+        ::tfbe::OpDefBuilder(__FILE__).OpName(name).KernelCreator([](const tfbe::CompilerContext* ctx) \
+                                                                  { return std::make_shared<kernel>(ctx); })

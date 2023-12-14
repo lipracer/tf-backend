@@ -9,8 +9,9 @@ namespace tfbe
 {
 namespace autogen
 {
-Tensor AddVN(const Tensor& lhs, const Tensor& rhs);
+Tensor AddV2(const Tensor& lhs, const Tensor& rhs);
 
-Tensor AddV3(const Tensor& lhs, const Tensor& rhs, float alpha, const std::vector<int>& shape);
+// dummy op for test codegen
+// Tensor AddV3(const Tensor& lhs, const Tensor& rhs, float alpha, const std::vector<int>& shape);
 }
 } // namespace tfbe

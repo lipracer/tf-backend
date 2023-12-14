@@ -16,12 +16,16 @@ class CompilerContext
 {
 public:
     CompilerContext() = default;
+    CompilerContext(StringRef name);
+    ~CompilerContext();
 
     template <typename T>
-    T getAttr(const std::string& key)
+    T getAttr(const std::string& key) const
     {
         return {};
     }
+
+    StringRef name() const;
 
 private:
     CompilerContextImpl* impl_;
