@@ -40,8 +40,6 @@ endmacro(add_be_obj_target)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/fmtlib/include)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/fmtlib/include)
-
 add_subdirectory(compiler)
 add_subdirectory(distribution)
 add_subdirectory(lib)
