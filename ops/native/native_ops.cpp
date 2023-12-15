@@ -1,30 +1,28 @@
+#include "native_ops.h"
 #include "adt/tensor.h"
 #include "logger/logger.h"
+#include "device_ops/device_ops.h"
 
 namespace tfbe
 {
 namespace autogen
 {
-Tensor AddV2(const Tensor& lhs, const Tensor& rhs)
+Tensor AddV2(AnyOpaque opaque, const Tensor& lhs, const Tensor& rhs)
 {
-    auto cpu_lhs = lhs.to(DeviceType::CPU);
-    auto cpu_rhs = rhs.to(DeviceType::CPU);
-
-    if (cpu_lhs.totalElements() > cpu_rhs.totalElements())
+    Tensor result;
+    if (lhs.totalElements() >= rhs.totalElements())
     {
-        cpu_rhs = cpu_rhs.broadcast(cpu_lhs.shape());
+        result = empty_tensor(lhs.getDeviceInfo(), lhs.shape(), lhs.elementType());
     }
-    else if (cpu_lhs.totalElements() < cpu_rhs.totalElements())
+    else
     {
-        cpu_lhs = cpu_lhs.broadcast(cpu_rhs.shape());
+        result = empty_tensor(rhs.getDeviceInfo(), rhs.shape(), rhs.elementType());
     }
-    Tensor result = cpu_lhs + cpu_rhs;
-
-    LOG(INFO) << "lhs:" << cpu_lhs;
-    LOG(INFO) << "rhs:" << cpu_rhs;
-    LOG(INFO) << "result:" << result;
-
-    result = result.to(DeviceType::GPU);
+#ifdef USE_CUDA
+    auto ret = ns_ops::broadcast_add<float>(opaque, lhs.data<float>(), rhs.data<float>(), result.data<float>(),
+                                            lhs.shape().vec(), rhs.shape().vec());
+    CHECK(ret == 0, "broadcast_add error:{}", ret);
+#endif
     return result;
 }
 

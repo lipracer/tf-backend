@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 
+#include "adt/meta_helper.h"
 #include "adt/tensor.h"
 #include "capi/backend_api.h"
 #include "device.h"
@@ -44,12 +45,11 @@ public:
 
     Tensor input(size_t idx);
 
-    // template <typename T>
-    // Tensor input(size_t idx);
-
     void setOutput(size_t idx, Tensor tensor);
 
     DeviceStream getCurrentStream();
+
+    AnyOpaque getOpContext();
 
 private:
     std::shared_ptr<DeviceOpKernelContextImpl> impl_;

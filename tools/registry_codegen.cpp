@@ -200,7 +200,7 @@ void CodeGenerator::CodeEmitter::emitClass()
     }
     callEmitter.newLine();
     callEmitter << "auto result = "
-                << "tfbe::autogen::" << name_ << "(";
+                << "tfbe::autogen::" << name_ << "(ctx->getOpContext(), ";
     llvm::interleaveComma(params, callEmitter, [&](auto& str) { callEmitter << str; });
     callEmitter << ");";
 
@@ -298,8 +298,14 @@ public:
                 emitter.addOutput(returnName);
             }
             auto paramList = funcDecl->parameters();
+            size_t paramIndex = 0;
             for (const auto& param : paramList)
             {
+                // first parameter is context we need bypass it
+                if (paramIndex++ == 0)
+                {
+                    continue;
+                }
                 std::string typeName;
                 auto nonRefType = param->getType().getNonReferenceType();
                 auto pair = param->getType().split();

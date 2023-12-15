@@ -1,7 +1,7 @@
 
 #include "kernel_context.h"
-
 #include "adt/tensor.h"
+#include "device_ops/device_ops.h"
 
 namespace tfbe
 {
@@ -97,6 +97,15 @@ void DeviceOpKernelContext::setOutput(size_t idx, Tensor tensor)
 DeviceStream DeviceOpKernelContext::getCurrentStream()
 {
     return {};
+}
+
+AnyOpaque DeviceOpKernelContext::getOpContext()
+{
+#ifdef USE_CUDA
+    return ns_ops::create_context();
+#else
+    return nullptr;
+#endif
 }
 
 } // namespace tfbe
