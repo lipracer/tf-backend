@@ -32,10 +32,10 @@ TfbeOpLibs_t TfbeGetOpLibs()
 
 void TfbeForeachOpLibs(TfbeOpLibs_t libs, ForeachOpdefCB cb)
 {
-    for (const auto& lib : reinterpret_cast<tfbe::OpLibs*>(libs.data)->libs())
+    for (auto& lib : *reinterpret_cast<tfbe::OpLibs*>(libs.data))
     {
         TfbeOpDef_t def;
-        def.data = const_cast<tfbe::OpDef*>(lib.get());
+        def.data = &lib;
         cb(def);
     }
 }

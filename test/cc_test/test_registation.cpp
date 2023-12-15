@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "gtest/gtest.h"
+#include "logger/logger.h"
 #include "op_registry.h"
 
 using namespace tfbe;
@@ -26,27 +27,20 @@ public:
     }
 };
 
-// TEST(OpRegistryTest, forward_op)
-// {
-//     using forward_helper = ForwardHelper<int, float, float&>;
-//     int lhs = 1;
-//     float rhs = 2.0f;
-//     float ret = 0.0f;
-//     tfbe::Any alhs(lhs);
-//     tfbe::Any arhs(rhs);
-//     tfbe::Any aret(ret, Any::by_reference_tag());
-//     // std::vector<tfbe::Any> stack = {std::move(alhs), std::move(arhs), std::move(aret)};
-//     std::vector<tfbe::Any> stack;
-//     stack.emplace_back(std::move(alhs));
-//     stack.emplace_back(std::move(arhs));
-//     stack.emplace_back(std::move(aret));
-//     forward_helper::forward_parameter(&dummy_op, stack);
-//     EXPECT_FLOAT_EQ(lhs + rhs, ret);
-// }
-
 TEST(OpRegistryTest, register_op)
 {
     REGISTER_KERNEL("AddV2", AddV2).Input("T").Output("T").Attr("N > 0");
     auto op_def = TfbeLookupOpDef(TfbeGetOpLibs(), "AddV2");
+    EXPECT_EQ(reinterpret_cast<tfbe::OpDef*>(op_def.data)->name(), "AddV2");
+}
+
+TEST(OpRegistryTest, nativa_register_op)
+{
+    for (auto& op_def : tfbe::OpLibs::instance())
+    {
+        LOG(INFO) << op_def;
+    }
+    auto op_def = TfbeLookupOpDef(TfbeGetOpLibs(), "AddV2");
+    LOG(INFO) << "first priority:" << *reinterpret_cast<tfbe::OpDef*>(op_def.data);
     EXPECT_EQ(reinterpret_cast<tfbe::OpDef*>(op_def.data)->name(), "AddV2");
 }

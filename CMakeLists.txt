@@ -33,11 +33,12 @@ macro(add_be_obj_target target)
     target_compile_options(${target} PRIVATE ${backend_opts})
     target_compile_definitions(${target} PRIVATE FMT_HEADER_ONLY)
     list(APPEND tf_backend_targets ${target})
+    if(ENABLE_CUDA_DEVICE)
+        target_compile_definitions(${target} PRIVATE USE_CUDA)
+    endif()
 endmacro(add_be_obj_target)
 
-if(ENABLE_CUDA_DEVICE)
-    set(CUDA_HOME_DIR /usr/local/cuda)
-endif()
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/fmtlib/include)
 
 add_subdirectory(compiler)
 add_subdirectory(distribution)
@@ -48,10 +49,6 @@ add_subdirectory(runtime)
 
 if(ENABLE_REG_CODEGEN)
     add_subdirectory(tools)
-endif()
-
-if(ENABLE_CUDA_DEVICE)
-    target_compile_definitions(runtime PRIVATE USE_CUDA)
 endif()
 
 # third_party

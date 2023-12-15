@@ -9,7 +9,7 @@
 #include <sstream>
 #include <thread>
 
-#include "../../third_party/fmtlib/include/fmt/core.h"
+#include "fmt/core.h"
 
 #ifndef LOGGER_LIKELY
     #define LOGGER_LIKELY(x) __builtin_expect(!!(x), 1)

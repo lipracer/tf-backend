@@ -1,10 +1,37 @@
 
 #include "kernel_context.h"
-
 #include "adt/tensor.h"
+#include "device_ops/device_ops.h"
 
 namespace tfbe
 {
+
+class CompilerContextImpl
+{
+public:
+    CompilerContextImpl(StringRef name) : name_(name.str()) {}
+
+    StringRef name() const
+    {
+        return name_;
+    }
+
+private:
+    std::string name_;
+};
+
+CompilerContext::CompilerContext(StringRef name) : impl_(new CompilerContextImpl(name)) {}
+
+CompilerContext::~CompilerContext()
+{
+    delete impl_;
+}
+
+StringRef CompilerContext::name() const
+{
+    return impl_->name();
+}
+
 //============================================================//
 // DeviceOpKernelContextImpl
 //============================================================//
@@ -70,6 +97,15 @@ void DeviceOpKernelContext::setOutput(size_t idx, Tensor tensor)
 DeviceStream DeviceOpKernelContext::getCurrentStream()
 {
     return {};
+}
+
+AnyOpaque DeviceOpKernelContext::getOpContext()
+{
+#ifdef USE_CUDA
+    return ns_ops::create_context();
+#else
+    return nullptr;
+#endif
 }
 
 } // namespace tfbe

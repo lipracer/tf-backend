@@ -26,6 +26,12 @@ public:
 
     StringRef(const std::string& str) : size_(str.size()), str_(str.c_str()) {}
 
+    StringRef(const StringRef& other) = default;
+    StringRef(StringRef&& other) = default;
+
+    StringRef& operator=(const StringRef& other) = default;
+    StringRef& operator=(StringRef&& other) = default;
+
     const CharT* c_str() const
     {
         return str_;
@@ -44,6 +50,11 @@ public:
     std::string str() const
     {
         return std::string(str_, str_ + size_);
+    }
+
+    const char* data() const
+    {
+        return str_;
     }
 
     bool operator==(const char* str) const

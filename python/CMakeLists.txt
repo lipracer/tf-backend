@@ -16,6 +16,7 @@ target_link_libraries(tf_backend PUBLIC $<TARGET_OBJECTS:device>)
 target_link_libraries(tf_backend PUBLIC $<TARGET_OBJECTS:ops>)
 target_link_libraries(tf_backend PUBLIC $<TARGET_OBJECTS:runtime>)
 target_link_libraries(tf_backend PUBLIC $<TARGET_OBJECTS:capi>)
+target_link_libraries(tf_backend PUBLIC $<TARGET_OBJECTS:native_ops>)
 
 
 target_link_libraries(tf_backend PRIVATE fmt::fmt-header-only)
@@ -34,4 +35,10 @@ if(ENABLE_CUDA_DEVICE)
     target_link_directories(tf_backend PUBLIC /usr/local/xcudart/lib)
     target_link_options(tf_backend PRIVATE "-Wl,-rpath,${CUDA_HOME_DIR}/lib64")
     target_link_options(tf_backend PRIVATE "-Wl,-rpath,/usr/local/xcudart/lib")
+endif()
+
+if(ENABLE_CUDA_DEVICE)
+    target_link_libraries(tf_backend PUBLIC ${DEV_OPS_LIB_NAME})
+    target_link_directories(tf_backend PUBLIC ${DEV_OPS_LIB_DIR})
+    target_link_options(tf_backend PRIVATE "-Wl,-rpath,${DEV_OPS_LIB_DIR}")
 endif()

@@ -29,8 +29,8 @@ public:
     ~Tensor();
     // total element size
     size_t totalElements() const;
-    // ArrayRef has the const qualify, this is proxy type
-    ArrayRef<DimT> shape();
+
+    ArrayRef<DimT> shape() const;
 
     ElementType elementType() const;
 
@@ -56,7 +56,7 @@ public:
     Tensor reshape(ArrayRef<DimT> new_shape);
     Tensor broadcast(ArrayRef<DimT> shape);
 
-    Tensor to(DeviceInfo device);
+    Tensor to(DeviceInfo device) const;
 
     void setAllocator(Allocator* allocator);
 
