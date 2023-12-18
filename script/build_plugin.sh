@@ -33,7 +33,7 @@ echo '0.26.1' > .bazelversion
 # bazelisk clean
 
 build_tensorflow() {
-bazelisk build //tensorflow/tools/pip_package:build_pip_package
+bazelisk build --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" //tensorflow/tools/pip_package:build_pip_package
 ./bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp/tensorflow_pkg
 pip install --force-reinstall /tmp/tensorflow_pkg/tensorflow-1.15.5-cp37-cp37m-linux_x86_64.whl
 pip install protobuf==3.19.0

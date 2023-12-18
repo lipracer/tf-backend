@@ -186,7 +186,11 @@ void D2HOp::Compute(OpKernelContext* ctx)
     }
 }
 
-BackendOp::BackendOp(OpKernelConstruction* ctx) : OpKernel(ctx) {}
+BackendOp::BackendOp(OpKernelConstruction* ctx) : OpKernel(ctx)
+{
+    LOG(INFO) << "construct op kernel:" << name();
+    LOG(INFO) << "construct op op def:" << def().DebugString();
+}
 
 BackendOp::~BackendOp() {}
 
