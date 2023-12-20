@@ -35,16 +35,13 @@ constexpr char ClassTemplate[] = R"(
 class {0} : public tfbe::DeviceOpKernel<{0}>
 {
 public:
-    {0}(const tfbe::CompilerContext* ctx) : tfbe::DeviceOpKernel<{0}>(ctx) {{
-{1}
+    {0}(const tfbe::CompilerContext* ctx) : tfbe::DeviceOpKernel<{0}>(ctx) {{{1}
     }
     void compute(tfbe::DeviceOpKernelContext* ctx)
-    {{
-{2}
+    {{{2}
     }
 private:
-    struct CAttr {{
-{3}
+    struct CAttr {{{3}
     } attrs_;
 };
 )";
@@ -150,7 +147,7 @@ public:
         os_ << "\n";
         for (size_t i = 0; i < indent_; ++i)
         {
-            os_ << "\t";
+            os_ << "    ";
         }
     }
 
@@ -199,6 +196,9 @@ void CodeGenerator::CodeEmitter::emitClass()
         params.push_back(std::string("attrs_.") + attr.first);
     }
     callEmitter.newLine();
+    callEmitter << llvm::formatv("LOG(INFO) << \"call device kernel:{0}\";", name_);
+    callEmitter.newLine();
+
     callEmitter << "auto result = "
                 << "tfbe::autogen::" << name_ << "(ctx->getOpContext(), ";
     llvm::interleaveComma(params, callEmitter, [&](auto& str) { callEmitter << str; });
