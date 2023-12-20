@@ -24,7 +24,8 @@ cp -r $PROJECT_DIR/include $PLUGIN_DIR/$TF_PLUGIN_NAME
 PYTHON_PAK_DIR=`pip show tensorflow | grep Location | awk '{print $2}'`
 TF_LIB_DIR=$PYTHON_PAK_DIR/tensorflow_core
 
-LINK_OPT_TF_FRAMEWORK="-L$TF_LIB_DIR -Wl,--as-needed -l:$TENSORFLOW_LIB_NAME -Wl,-rpath,$TF_LIB_DIR -L$PROJECT_BUILD_DIR/lib/tf_backend -Wl,--as-needed -l:libtf_backend.so -Wl,-rpath,$PYTHON_PAK_DIR/tf_backend -L$TF_LIB_DIR/python -Wl,--as-needed -l:_pywrap_tensorflow_internal.so -Wl,-rpath,$TF_LIB_DIR/python"
+LINK_OPT_TF_FRAMEWORK="-L$TF_LIB_DIR -Wl,--as-needed -l:$TENSORFLOW_LIB_NAME -L$PROJECT_BUILD_DIR/lib/tf_backend -Wl,--as-needed -l:libtf_backend.so -L$TF_LIB_DIR/python -Wl,--as-needed -l:_pywrap_tensorflow_internal.so"
+# LINK_OPT_TF_FRAMEWORK="-L$TF_LIB_DIR -Wl,--as-needed -l:$TENSORFLOW_LIB_NAME -Wl,-rpath,$TF_LIB_DIR -L$PROJECT_BUILD_DIR/lib/tf_backend -Wl,--as-needed -l:libtf_backend.so -Wl,-rpath,$PYTHON_PAK_DIR/tf_backend -L$TF_LIB_DIR/python -Wl,--as-needed -l:_pywrap_tensorflow_internal.so -Wl,-rpath,$TF_LIB_DIR/python"
 # LINK_OPT_TF_FRAMEWORK="-L$TF_LIB_DIR -l:$TENSORFLOW_LIB_NAME -L$PROJECT_BUILD_DIR/lib/tf_backend -l:libtf_backend.so -L$TF_LIB_DIR/python -l:_pywrap_tensorflow_internal.so"
 
 python $SCRIPT_DIR/append_link_opts.py $PLUGIN_DIR/$TF_PLUGIN_NAME/BUILD "$LINK_OPT_TF_FRAMEWORK" $PROJECT_DIR/include

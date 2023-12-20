@@ -1,12 +1,24 @@
 #include "native_ops.h"
+
 #include "adt/tensor.h"
-#include "logger/logger.h"
 #include "device_ops/device_ops.h"
+#include "logger/logger.h"
 
 namespace tfbe
 {
 namespace autogen
 {
+
+Tensor Neg(AnyOpaque opaque, const Tensor& input)
+{
+    auto result = empty_tensor(input.getDeviceInfo(), input.shape(), input.elementType());
+#ifdef USE_CUDA
+    auto ret = ns_ops::neg<float>(opaque, input.data<float>(), result.data<float>(), result.totalElements());
+    CHECK(ret == 0, "neg error:{}", ret);
+#endif
+    return result;
+}
+
 Tensor AddV2(AnyOpaque opaque, const Tensor& lhs, const Tensor& rhs)
 {
     Tensor result;
@@ -26,7 +38,7 @@ Tensor AddV2(AnyOpaque opaque, const Tensor& lhs, const Tensor& rhs)
     return result;
 }
 
-Tensor AddV3(const Tensor& lhs, const Tensor& rhs, float alpha, const std::vector<int>& shape)
+Tensor AddV3(AnyOpaque opaque, const Tensor& lhs, const Tensor& rhs, float alpha, const std::vector<int>& shape)
 {
     return {};
 }
