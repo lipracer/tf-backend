@@ -92,6 +92,11 @@ target_compile_options(gtest PRIVATE ${backend_opts})
 target_compile_options(gtest_main PRIVATE ${backend_opts})
 target_link_libraries(UnitTest gtest gtest_main fmt tf_backend)
 link_directories(${CMAKE_BINARY_DIR}/lib/tf_backend)
+if(ENABLE_CUDA_DEVICE)
+set_target_properties(UnitTest PROPERTIES LINK_FLAGS "-Wl,-rpath,${CMAKE_BINARY_DIR}/lib/tf_backend -Wl,-rpath,/usr/local/xcudart/lib -Wl,-rpath,${CUDA_HOME_DIR}/lib64")
+else()
+set_target_properties(UnitTest PROPERTIES LINK_FLAGS "-Wl,-rpath,${CMAKE_BINARY_DIR}/lib/tf_backend")
+endif()
 
 add_test(NAME UnitTest COMMAND UnitTest)
 
