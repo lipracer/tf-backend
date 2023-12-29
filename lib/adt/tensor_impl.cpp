@@ -51,7 +51,7 @@ TensorImpl::~TensorImpl() {}
 
 size_t TensorImpl::totalElements() const
 {
-    return ::std::accumulate(shape_.begin(), shape_.end(), 1, std::multiplies<DimT>());
+    return ::std::accumulate(shape_.begin(), shape_.end(), DimT(1), std::multiplies<DimT>());
 }
 
 size_t TensorImpl::numBytes() const
