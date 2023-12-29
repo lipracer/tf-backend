@@ -197,7 +197,7 @@ namespace
 void broadcastOneDim(ArrayRef<DimT> shape, DimT dim, size_t eleBytes, void* src_data, void* dst_data,
                      size_t src_size = -1, size_t dst_size = -1)
 {
-    auto outter_loop_count = std::accumulate(shape.begin(), shape.begin() + dim, 1, std::multiplies<>());
+    auto outter_loop_count = std::accumulate(shape.begin(), shape.begin() + dim, DimT(1), std::multiplies<>());
     auto batch_size = std::accumulate(shape.begin() + dim + 1, shape.end(), eleBytes, std::multiplies<>());
     for (DimT i = 0; i < outter_loop_count; ++i)
     {

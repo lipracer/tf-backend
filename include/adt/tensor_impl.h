@@ -21,7 +21,7 @@ size_t ElementSize(ElementType ele_type);
 
 inline size_t TotalElements(ArrayRef<DimT> shape)
 {
-    return ::std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<DimT>());
+    return ::std::accumulate(shape.begin(), shape.end(), DimT(1), std::multiplies<DimT>());
 }
 
 struct SerializeConfig
